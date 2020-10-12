@@ -40,7 +40,7 @@ def sms():
         Target2RShort=round(close*(((100-(2*AvgGain))/100)),2)
         Target3RShort=round(close*(((100-(3*AvgGain))/100)),2)
 
-        change = str(((price-close)/close)*100) + '%'
+        change = str(round(((price-close)/close)*100), 2) + '%'
         
         # Set up scraper
         url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
@@ -52,15 +52,15 @@ def sms():
         stocks.columns = stocks.iloc[0]
         stocks = stocks[1:]
         stocks['Price'] = [f'{price}']
-        stocks['Change'] = [f'{round(int(change), 2)}']
-        stocks['Risk 1 Buy'] = [f'{round(int(Target1RBuy), 2)}']
-        stocks['Risk 2 Buy'] = [f'{round(int(Target2RBuy), 2)}']
-        stocks['Risk 3 Buy'] = [f'{round(int(Target3RBuy), 2)}']
-        stocks['Max Stop Buy'] = [f'{round(int(maxStopBuy), 2)}']
-        stocks['Risk 1 Short'] = [f'{round(int(Target1RShort), 2)}']
-        stocks['Risk 2 Short'] = [f'{round(int(Target2RShort), 2)}']
-        stocks['Risk 3 Short'] = [f'{round(int(Target3RShort), 2)}']
-        stocks['Max Stop Short'] = [f'{round(int(maxStopShort), 2)}']
+        stocks['Change'] = [f'{change}']
+        stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
+        stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
+        stocks['Risk 3 Buy'] = [f'{Target3RBuy}']
+        stocks['Max Stop Buy'] = [f'{maxStopBuy}']
+        stocks['Risk 1 Short'] = [f'{Target1RShort}']
+        stocks['Risk 2 Short'] = [f'{Target2RShort}']
+        stocks['Risk 3 Short'] = [f'{Target3RShort}']
+        stocks['Max Stop Short'] = [f'{maxStopShort}']
         # stocks['Resistance 1'] = [f'{}']
         # stocks['Resistance 2'] = [f'{}']
         # stocks['Resistance 3'] = [f'{}']
