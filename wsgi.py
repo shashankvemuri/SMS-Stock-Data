@@ -53,7 +53,7 @@ def sms():
         stocks = stocks[1:]
         stocks['Price'] = [f'{price}']
         stocks['Change'] = [f'{round(change, 2)}']
-        stocks['Risk 1 Buy'] = [f'{round(Target1RBuy,, 2)}']
+        stocks['Risk 1 Buy'] = [f'{round(Target1RBuy, 2)}']
         stocks['Risk 2 Buy'] = [f'{round(Target2RBuy, 2)}']
         stocks['Risk 3 Buy'] = [f'{round(Target3RBuy, 2)}']
         stocks['Max Stop Buy'] = [f'{round(maxStopBuy, 2)}']
@@ -68,13 +68,11 @@ def sms():
         # stocks['Support 1'] = [f'{}']
         # stocks['Support 2'] = [f'{}']
         # stocks['Support 3'] = [f'{}']
-
-        return_message = stocks.to_string()
         message = ""
         for attr, val in zip(stocks.columns, stocks.iloc[0]):
-            message+=f"{attr} : {val}\n"
+            message=message + f"{attr} : {val}\n"
 
-        resp.message(return_message)
+        resp.message(message)
         return str(resp)
     
     except Exception as e:
