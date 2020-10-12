@@ -1,4 +1,3 @@
-import requests
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from yahoo_fin import stock_info as si
@@ -6,9 +5,7 @@ import pandas as pd
 from pandas_datareader import data as pdr
 from bs4 import BeautifulSoup as soup
 from urllib.request import Request, urlopen
-import numpy as np
 import datetime
-import pprint
 
 app = Flask(__name__)
 
