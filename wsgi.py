@@ -52,15 +52,15 @@ def sms():
         stocks.columns = stocks.iloc[0]
         stocks = stocks[1:]
         stocks['Price'] = [f'{price}']
-        stocks['Change'] = [f'{change}']
-        stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
-        stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
-        stocks['Risk 3 Buy'] = [f'{Target3RBuy}']
-        stocks['Max Stop Buy'] = [f'{maxStopBuy}']
-        stocks['Risk 1 Short'] = [f'{Target1RShort}']
-        stocks['Risk 2 Short'] = [f'{Target2RShort}']
-        stocks['Risk 3 Short'] = [f'{Target3RShort}']
-        stocks['Max Stop Short'] = [f'{maxStopShort}']
+        stocks['Change'] = [f'{round(change, 2)}']
+        stocks['Risk 1 Buy'] = [f'{round(Target1RBuy,, 2)}']
+        stocks['Risk 2 Buy'] = [f'{round(Target2RBuy, 2)}']
+        stocks['Risk 3 Buy'] = [f'{round(Target3RBuy, 2)}']
+        stocks['Max Stop Buy'] = [f'{round(maxStopBuy, 2)}']
+        stocks['Risk 1 Short'] = [f'{round(Target1RShort, 2)}']
+        stocks['Risk 2 Short'] = [f'{round(Target2RShort, 2)}']
+        stocks['Risk 3 Short'] = [f'{round(Target3RShort, 2)}']
+        stocks['Max Stop Short'] = [f'{round(maxStopShort, 2)}']
         # stocks['Resistance 1'] = [f'{}']
         # stocks['Resistance 2'] = [f'{}']
         # stocks['Resistance 3'] = [f'{}']
@@ -70,6 +70,9 @@ def sms():
         # stocks['Support 3'] = [f'{}']
 
         return_message = stocks.to_string()
+        message = ""
+        for attr, val in zip(stocks.columns, stocks.iloc[0]):
+            message+=f"{attr} : {val}\n"
 
         resp.message(return_message)
         return str(resp)
