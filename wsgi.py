@@ -30,12 +30,12 @@ def sms():
 
         df = pdr.get_data_yahoo(stock, start, now)
         close=df["Adj Close"][-1]
-        maxStopBuy=close*((100-AvgLoss)/100)
+        maxStopBuy=round(close*((100-AvgLoss)/100), 2)
         Target1RBuy=round(close*((100+AvgGain)/100),2)
         Target2RBuy=round(close*(((100+(2*AvgGain))/100)),2)
         Target3RBuy=round(close*(((100+(3*AvgGain))/100)),2)
 
-        maxStopShort=close*((100+AvgLoss)/100)
+        maxStopShort=round(close*((100+AvgLoss)/100), 2)
         Target1RShort=round(close*((100-AvgGain)/100),2)
         Target2RShort=round(close*(((100-(2*AvgGain))/100)),2)
         Target3RShort=round(close*(((100-(3*AvgGain))/100)),2)
