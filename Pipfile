@@ -6,14 +6,14 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-pandas = "*"
 gunicorn = "*"
-requests = "*"
+requests-html = "*"
 twilio = "*"
-flask = "*"
-numpy = "*"
+pandas = "*"
 yahoo-fin = "*"
+flask = "*"
 pandas-datareader = "*"
+beautifulsoup4 = "*"
 
 [requires]
 python_version = "3.8"
