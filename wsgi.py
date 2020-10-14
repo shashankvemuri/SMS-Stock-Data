@@ -2,7 +2,6 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from yahoo_fin import stock_info as si
 import pandas as pd
-from pandas_datareader import data as pdr
 from bs4 import BeautifulSoup as soup
 from urllib.request import Request, urlopen
 import datetime
@@ -28,19 +27,17 @@ def sms():
         AvgGain= 15
         AvgLoss= 5
 
-        df = pdr.get_data_yahoo(stock, start, now)
-        close=df["Adj Close"][-1]
-        maxStopBuy=round(close*((100-AvgLoss)/100), 2)
-        Target1RBuy=round(close*((100+AvgGain)/100),2)
-        Target2RBuy=round(close*(((100+(2*AvgGain))/100)),2)
-        Target3RBuy=round(close*(((100+(3*AvgGain))/100)),2)
+        maxStopBuy=round(price*((100-AvgLoss)/100), 2)
+        Target1RBuy=round(price*((100+AvgGain)/100),2)
+        Target2RBuy=round(price*(((100+(2*AvgGain))/100)),2)
+        Target3RBuy=round(price*(((100+(3*AvgGain))/100)),2)
 
-        maxStopShort=round(close*((100+AvgLoss)/100), 2)
-        Target1RShort=round(close*((100-AvgGain)/100),2)
-        Target2RShort=round(close*(((100-(2*AvgGain))/100)),2)
-        Target3RShort=round(close*(((100-(3*AvgGain))/100)),2)
+        maxStopShort=round(price*((100+AvgLoss)/100), 2)
+        Target1RShort=round(price*((100-AvgGain)/100),2)
+        Target2RShort=round(price*(((100-(2*AvgGain))/100)),2)
+        Target3RShort=round(price*(((100-(3*AvgGain))/100)),2)
 
-        change = str(round(((price-close)/close)*100, 4)) + '%'
+        change = str(round(((price-price)/price)*100, 4)) + '%'
         
         # Set up scraper
         url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
