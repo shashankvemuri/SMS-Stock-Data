@@ -65,7 +65,7 @@ def sms():
         # stocks['Support 1'] = [f'{}']
         # stocks['Support 2'] = [f'{}']
         # stocks['Support 3'] = [f'{}']
-        message = ""
+        message = "\n"
         for attr, val in zip(stocks.columns, stocks.iloc[0]):
             message=message + f"{attr} : {val}\n"
 
@@ -73,7 +73,7 @@ def sms():
         return str(resp)
     
     except Exception as e:
-        resp.message(f'{e}')
+        resp.message(f'\n{e}')
         return str(resp)
 
 if __name__ == "__main__":
