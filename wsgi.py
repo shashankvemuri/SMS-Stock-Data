@@ -4,7 +4,6 @@ from yahoo_fin import stock_info as si
 import pandas as pd
 from bs4 import BeautifulSoup as soup
 from urllib.request import Request, urlopen
-import datetime
 
 app = Flask(__name__)
 
@@ -20,9 +19,6 @@ def sms():
         # price 
         price = si.get_live_price('{}'.format(message_body))
         price = round(price, 2)
-
-        now = datetime.datetime.now()
-        start = datetime.date.today() - datetime.timedelta(days=int(365.25*2))
 
         AvgGain= 15
         AvgLoss= 5
