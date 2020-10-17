@@ -430,21 +430,28 @@ def screener():
         lb_matches1 = ["long", "buys"]
         lb_matches2 = ["long", "buy"]
         lb_matches3 = ["lb"]
+
         ls_matches1 = ["long", "shorts"]
         ls_matches2 = ["long", "short"]
         ls_matches3 = ["ls"]
+        
         ib_matches1 = ["intraday", "buys"]
         ib_matches2 = ["intraday", "buy"]
         ib_matches3 = ["ib"]
+        ib_matches4 = ["today", "buy"]
+        ib_matches5 = ["today", "buys"]
+        
         is_matches1 = ["intraday", "shorts"]
         is_matches2 = ["intraday", "short"]
         is_matches3 = ["is"]
+        is_matches4 = ["today", "short"]
+        is_matches5 = ["today", "shorts"]
         
         if all(x in message_body.lower() for x in lb_matches1) or all(x in message_body for x in lb_matches2) or all(x in message_body for x in lb_matches3):
             df = long_buys()
             tickers = df['Ticker'].tolist()
             
-            message = "Long Stocks to Buy:"
+            message = "Stocks to Buy (Long Term):"
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
@@ -453,24 +460,24 @@ def screener():
             df = long_shorts()
             tickers = df['Ticker'].tolist()
         
-            message = "Long Stocks to Short:"
+            message = "Stocks to Short (Long Term):"
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
         
-        elif all(x in message_body.lower() for x in ib_matches1) or all(x in message_body for x in ib_matches2) or all(x in message_body for x in ib_matches3):
+        elif all(x in message_body.lower() for x in ib_matches1) or all(x in message_body for x in ib_matches2) or all(x in message_body for x in ib_matches3)  or all(x in message_body for x in ib_matches4)  or all(x in message_body for x in ib_matches5):
             df = int_buys()
             tickers = df['Ticker'].tolist()
             
-            message = "Intraday Stocks to Buy:"
+            message = "Stocks to Buy Today:"
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
             
-        elif all(x in message_body.lower() for x in is_matches1) or all(x in message_body for x in is_matches2) or all(x in message_body for x in is_matches3):    
+        elif all(x in message_body.lower() for x in is_matches1) or all(x in message_body for x in is_matches2) or all(x in message_body for x in is_matches3) or all(x in message_body for x in is_matches4) or all(x in message_body for x in is_matches5):
             df = int_shorts()
             tickers = df['Ticker'].tolist()
             
-            message = "Intraday Stocks to Short:"
+            message = "Stocks to Short Today:"
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
