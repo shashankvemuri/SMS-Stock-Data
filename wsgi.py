@@ -427,7 +427,20 @@ def screener():
         message_body = request.form['Body']
         resp = MessagingResponse()
         
-        if message_body.lower() == 'long buys':
+        lb_matches1 = ["long", "buys"]
+        lb_matches2 = ["long", "buy"]
+        lb_matches3 = ["lb"]
+        ls_matches1 = ["long", "shorts"]
+        ls_matches2 = ["long", "short"]
+        ls_matches3 = ["ls"]
+        ib_matches1 = ["intraday", "buys"]
+        ib_matches2 = ["intraday", "buy"]
+        ib_matches3 = ["ib"]
+        is_matches1 = ["intraday", "shorts"]
+        is_matches2 = ["intraday", "short"]
+        is_matches3 = ["is"]
+        
+        if all(x in message_body.lower() for x in lb_matches1) or all(x in message_body for x in lb_matches2) or all(x in message_body for x in lb_matches3):
             df = long_buys()
             tickers = df['Ticker'].tolist()
             
@@ -436,7 +449,7 @@ def screener():
                 message += f"\n{tickers[i]}"
         
         
-        elif message_body.lower() == 'long shorts':
+        elif all(x in message_body.lower() for x in ls_matches1) or all(x in message_body for x in ls_matches2) or all(x in message_body for x in ls_matches3):
             df = long_shorts()
             tickers = df['Ticker'].tolist()
         
@@ -445,7 +458,7 @@ def screener():
                 message += f"\n{tickers[i]}"
         
         
-        elif message_body.lower() == 'intraday buys':
+        elif all(x in message_body.lower() for x in ib_matches1) or all(x in message_body for x in ib_matches2) or all(x in message_body for x in ib_matches3):
             df = int_buys()
             tickers = df['Ticker'].tolist()
             
@@ -453,7 +466,7 @@ def screener():
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
             
-        elif message_body.lower() == 'intraday shorts':
+        elif all(x in message_body.lower() for x in is_matches1) or all(x in message_body for x in is_matches2) or all(x in message_body for x in is_matches3):    
             df = int_shorts()
             tickers = df['Ticker'].tolist()
             
