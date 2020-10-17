@@ -4,8 +4,6 @@ from yahoo_fin import stock_info as si
 import pandas as pd
 from bs4 import BeautifulSoup as soup
 from urllib.request import Request, urlopen
-import pandas as pd 
-from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
@@ -431,43 +429,43 @@ def screener():
         message_body = request.form['Body']
         resp = MessagingResponse()
         
-        if all(x in ['long', 'buys'] for x in message_body):
+        if message_body.lower() == 'long buys':
             df = long_buys()
             tickers = df['Ticker'].tolist()
             
             message = "Long Stocks to Buy:"
-            for i in range(5):
-                message += f"\n {tickers[i]}"
-    
-    
-        elif all(x in ['long', 'shorts'] for x in message_body):
+            for i in range(10):
+                message += f"\n{tickers[i]}"
+        
+        
+        elif message_body.lower() == 'long shorts':
             df = long_shorts()
             tickers = df['Ticker'].tolist()
             length = len(tickers)
         
             message = "Long Stocks to Short:"
             for i in range(length):
-                message += f"\n {tickers[i]}"
+                message += f"\n{tickers[i]}"
         
         
-        elif all(x in ['intraday', 'buys'] for x in message_body):
+        elif message_body.lower() == 'intraday buys':
             df = int_buys()
             tickers = df['Ticker'].tolist()
             
             message = "Intraday Stocks to Buy:"
             for i in range(5):
-                message += f"\n {tickers[i]}"
+                message += f"\n{tickers[i]}"
             
-        elif all(x in ['intraday', 'shorts'] for x in message_body):
+        elif message_body.lower() == 'intraday shorts':
             df = int_shorts()
             tickers = df['Ticker'].tolist()
             
             message = "Intraday Stocks to Short:"
             for i in range(5):
-                message += f"\n {tickers[i]}"
+                message += f"\n{tickers[i]}"
         
         else:
-            message = "Include long or intraday and buy or short in your message!"
+            message = "Include (long or intraday) and (buys or shorts) in your message!"
         
         resp.message(message)
         return str(resp)
