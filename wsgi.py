@@ -20,7 +20,7 @@ def long_buys():
     stocks.columns = stocks.iloc[0]
     stocks = stocks[1:]
 
-    tickers = stocks['Ticker'].tolist()[:15]
+    tickers = stocks['Ticker'].tolist()[:5]
     
     # Get Data
     finviz_url = 'https://finviz.com/quote.ashx?t='
