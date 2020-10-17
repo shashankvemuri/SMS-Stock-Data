@@ -20,7 +20,7 @@ def long_buys():
     stocks.columns = stocks.iloc[0]
     stocks = stocks[1:]
 
-    tickers = stocks['Ticker'].tolist()
+    tickers = stocks['Ticker'].tolist()[:15]
     
     # Get Data
     finviz_url = 'https://finviz.com/quote.ashx?t='
@@ -179,7 +179,7 @@ def long_shorts():
         values.append(mean)
         
     df = pd.DataFrame(list(zip(tickers, values)), columns =['Ticker', 'Mean Sentiment']) 
-    df = df.sort_values('Mean Sentiment', ascending=False)
+    df = df.sort_values('Mean Sentiment', ascending=True)
     
     return df
 
@@ -353,7 +353,7 @@ def int_shorts():
         values.append(mean)
         
     df = pd.DataFrame(list(zip(tickers, values)), columns =['Ticker', 'Mean Sentiment']) 
-    df = df.sort_values('Mean Sentiment', ascending=False)
+    df = df.sort_values('Mean Sentiment', ascending=True)
     
     return df
 
@@ -453,7 +453,7 @@ def screener():
             tickers = df['Ticker'].tolist()
             
             message = "Intraday Stocks to Buy:"
-            for i in range(5):
+            for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
             
         elif message_body.lower() == 'intraday shorts':
@@ -461,7 +461,7 @@ def screener():
             tickers = df['Ticker'].tolist()
             
             message = "Intraday Stocks to Short:"
-            for i in range(5):
+            for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
         else:
