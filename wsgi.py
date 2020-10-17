@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 def long_buys():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,geo_usa,ind_stocksonly,sh_avgvol_o500,sh_insttrans_pos,sh_price_o10,ta_highlow52w_a30h,ta_perf_52w50o,ta_perf2_13wup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-volume&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,geo_usa,ind_stocksonly,sh_avgvol_o500,sh_insttrans_pos,sh_price_o10,ta_highlow52w_a30h,ta_perf_52w50o,ta_perf2_13wup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa,targetprice_above&ft=4&o=change&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = soup(webpage, "html.parser")
@@ -360,7 +360,6 @@ def int_shorts():
 @app.route('/sms', methods = ['POST'])
 def sms():
     try:
-        number = request.form['From']
         message_body = request.form['Body']
         resp = MessagingResponse()
         
@@ -425,7 +424,6 @@ def sms():
 @app.route('/screener', methods = ['POST'])
 def screener():
     try:
-        number = request.form['From']
         message_body = request.form['Body']
         resp = MessagingResponse()
         
@@ -434,17 +432,16 @@ def screener():
             tickers = df['Ticker'].tolist()
             
             message = "Long Stocks to Buy:"
-            for i in range(10):
+            for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
         
         elif message_body.lower() == 'long shorts':
             df = long_shorts()
             tickers = df['Ticker'].tolist()
-            length = len(tickers)
         
             message = "Long Stocks to Short:"
-            for i in range(length):
+            for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
         
