@@ -74,7 +74,7 @@ def news():
     news = pd.read_html(str(html))[5]
     news.columns = ['0', 'Time', 'Headlines']
     news = news.drop(columns = ['0'])
-    return news.head(10)
+    return news.head(25)
 
 def long_buys():
     # Set up scraper
@@ -207,7 +207,7 @@ def screener():
             headlines = df['Headlines'].tolist()
             times = df['Time'].tolist()
 
-            message = "News:"
+            message = "Market News:"
             for time, headline in zip(times, headlines):
                 message += f"\n{time} : {headline}"
 
@@ -288,6 +288,7 @@ def screener():
         return str(resp)
     
     except Exception as e:
+        resp = MessagingResponse()
         resp.message(f'\n{e}')
         return str(resp)
     
