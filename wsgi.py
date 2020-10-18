@@ -2,10 +2,8 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from yahoo_fin import stock_info as si
 import pandas as pd
-from bs4 import BeautifulSoup as soup
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 
@@ -13,7 +11,7 @@ def get_top_stocks():
     url = ("https://finviz.com/")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
 
     ups = pd.read_html(str(html), attrs = {'class': 't-home-table'})[0]
     ups.columns = ['Ticker', 'Last', 'Change', 'Volume', '4', 'Signal']
@@ -25,7 +23,7 @@ def get_bottom_stocks():
     url = ("https://finviz.com/")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
 
     downs = pd.read_html(str(html), attrs = {'class': 't-home-table'})[1]
     downs.columns = ['Ticker', 'Last', 'Change', 'Volume', '4', 'Signal']
@@ -37,7 +35,7 @@ def get_earnings():
     url = ("https://finviz.com/")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
 
     earnings = pd.read_html(str(html), attrs = {'class': 't-home-table'})[7]
     earnings.columns = ['Date', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker']
@@ -49,7 +47,7 @@ def get_futures():
     url = ("https://finviz.com/")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
 
     futures1 = pd.read_html(str(html), attrs = {'class': 't-home-table'})[8]
     futures1.columns = ['Index', 'Last', 'Change', 'Change (%)', '4']
@@ -71,7 +69,7 @@ def news():
     url = ("https://finviz.com/news.ashx")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
 
     news = pd.read_html(str(html))[5]
     news.columns = ['0', 'Time', 'Headlines']
@@ -83,7 +81,7 @@ def long_buys():
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,geo_usa,ind_stocksonly,sh_avgvol_o500,sh_insttrans_pos,sh_price_o10,ta_highlow52w_a30h,ta_perf_52w50o,ta_perf2_13wup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa,targetprice_above&ft=4&o=change&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
     
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
@@ -96,7 +94,7 @@ def long_shorts():
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,geo_usa,ind_stocksonly,sh_avgvol_o300,sh_insidertrans_neg,sh_price_o5,ta_sma20_pb,ta_sma200_pa100,targetprice_below&ft=4&o=-change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
     
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
@@ -109,7 +107,7 @@ def int_buys():
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,geo_usa,ind_stocksonly,ipodate_prev3yrs,sh_avgvol_o500,sh_price_o15,ta_changeopen_u,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
     
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
@@ -122,7 +120,7 @@ def int_shorts():
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,geo_usa,ind_stocksonly,sh_avgvol_o300,sh_insidertrans_neg,sh_insttrans_neg,sh_price_o7,ta_changeopen_d,ta_rsi_ob60,ta_sma200_pa100,targetprice_below&ft=4&o=-change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
-    html = soup(webpage, "html.parser")
+    html = BeautifulSoup(webpage, "html.parser")
     
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
@@ -178,7 +176,7 @@ def screener():
             url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             webpage = urlopen(req).read()
-            html = soup(webpage, "html.parser")
+            html = BeautifulSoup(webpage, "html.parser")
 
             stocks = pd.read_html(str(html))[-2]
             stocks.columns = stocks.iloc[0]

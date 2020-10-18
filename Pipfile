@@ -14,7 +14,6 @@ yahoo-fin = "*"
 flask = "*"
 pandas-datareader = "*"
 beautifulsoup4 = "*"
-nltk = "*"
 
 [requires]
 python_version = "3.8"
