@@ -247,7 +247,7 @@ def screener():
                 message += f"\n{ticker} : {price} : {change}"
 
         elif message_body.lower() == 'futures':
-            df = get_top_stocks()
+            df = get_futures()
             indices = df['Index'].tolist()
             prices = df['Last'].tolist()
             changes = df['Change'].tolist()
@@ -257,7 +257,7 @@ def screener():
                 message += f"\n{index} : {price} : {change}"
 
         elif message_body.lower() == 'earnings':
-            df = get_bottom_stocks()
+            df = get_earnings()
             tickers = df['Ticker'].tolist()
             dates = df['Date'].tolist()
 
