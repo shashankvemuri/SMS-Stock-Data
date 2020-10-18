@@ -202,6 +202,21 @@ def screener():
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
 
+        elif message_body.lower() == 'help':
+            message = """
+            Texting Functions:
+            \n Enter a ticker to get its information
+            \n Enter "news" to get recent market news
+            \n Enter "gainers" to get today's top gainers
+            \n Enter "losers" to get today's top losers
+            \n Enter "futures" to get futures index data
+            \n Enter "earnings" to get upcoming earning dates
+            \n Enter "long buys" to get long term stock buys
+            \n Enter "long shorts" to get long term stock shorts
+            \n Enter "intraday buys" to get intraday stock buys
+            \n Enter "intraday shorts" to get intraday stock shorts
+                    """
+
         elif message_body.lower() == 'news':
             df = news()
             headlines = df['Headlines'].tolist()
