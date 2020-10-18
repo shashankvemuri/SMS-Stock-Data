@@ -150,7 +150,7 @@ def screener():
         is_matches3 = ["today", "short"]
         is_matches4 = ["today", "shorts"]
         
-        if message_body in si.tickers_sp500() or ticker in si.tickers_nasdaq() or si.tickers_other():
+        if message_body in si.tickers_sp500() or message_body in si.tickers_nasdaq() or message_body in si.tickers_other():
             stock = message_body
             
             # price
