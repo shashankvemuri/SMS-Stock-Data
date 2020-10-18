@@ -251,20 +251,18 @@ def screener():
             df = get_futures()
             indices = df['Index'].tolist()
             prices = df['Last'].tolist()
-            changes = df['Change'].tolist()
+            changes = df['Change (%)'].tolist()
 
             message = "Futures:"
             for index, price, change in zip(indices, prices, changes):
-                message += f"\n{index} : {price} : {change}"
+                message += f"\n{index} | {price} | {change}"
 
         elif message_body.lower() == 'earnings':
             df = get_earnings()
-            tickers = df['Ticker'].tolist()
-            dates = df['Date'].tolist()
 
             message = "Earnings:"
-            for date, ticker in zip(dates, tickers):
-                message += f"\n{date} : {ticker}"
+            for i in range(len(df)):
+                message += f"\n{df.iloc[i]}"
 
         elif all(x in message_body.lower() for x in lb_matches1) or all(x in message_body for x in lb_matches2):
             df = long_buys()
