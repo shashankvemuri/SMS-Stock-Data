@@ -9,6 +9,75 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 
+def get_top_stocks():
+    url = ("https://finviz.com/")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = soup(webpage, "html.parser")
+
+    ups = pd.read_html(str(html), attrs = {'class': 't-home-table'})[0]
+    ups.columns = ['Ticker', 'Last', 'Change', 'Volume', '4', 'Signal']
+    ups = ups.drop(columns = ['4'])
+    ups = ups.iloc[1:]
+    return ups
+
+def get_bottom_stocks():
+    url = ("https://finviz.com/")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = soup(webpage, "html.parser")
+
+    downs = pd.read_html(str(html), attrs = {'class': 't-home-table'})[1]
+    downs.columns = ['Ticker', 'Last', 'Change', 'Volume', '4', 'Signal']
+    downs = downs.drop(columns = ['4'])
+    downs = downs.iloc[1:]
+    return downs
+
+def get_earnings():
+    url = ("https://finviz.com/")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = soup(webpage, "html.parser")
+
+    earnings = pd.read_html(str(html), attrs = {'class': 't-home-table'})[7]
+    earnings.columns = ['Date', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker', 'Ticker']
+    earnings = earnings.iloc[1:]
+    return earnings
+
+
+def get_futures():
+    url = ("https://finviz.com/")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = soup(webpage, "html.parser")
+
+    futures1 = pd.read_html(str(html), attrs = {'class': 't-home-table'})[8]
+    futures1.columns = ['Index', 'Last', 'Change', 'Change (%)', '4']
+    futures1 = futures1.drop(columns = ['4'])
+    futures1 = futures1.iloc[1:]
+    
+    futures2 = pd.read_html(str(html), attrs = {'class': 't-home-table'})[9]
+    futures2.columns = ['Index', 'Last', 'Change', 'Change (%)', '4']
+    futures2 = futures2.drop(columns = ['4'])
+    futures2 = futures2.iloc[1:]
+    
+    frames = [futures1, futures2]
+    futures = pd.concat(frames)
+    futures = futures.set_index('Index')
+    futures = futures.dropna()
+    return futures
+
+def news():
+    url = ("https://finviz.com/news.ashx")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = soup(webpage, "html.parser")
+
+    news = pd.read_html(str(html))[5]
+    news.columns = ['0', 'Time', 'Headlines']
+    news = news.drop(columns = ['0'])
+    return news.head(10)
+
 def long_buys():
     # Set up scraper
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,geo_usa,ind_stocksonly,sh_avgvol_o500,sh_insttrans_pos,sh_price_o10,ta_highlow52w_a30h,ta_perf_52w50o,ta_perf2_13wup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa,targetprice_above&ft=4&o=change&ar=180")
@@ -19,82 +88,8 @@ def long_buys():
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
     stocks = stocks[1:]
-
-    tickers = stocks['Ticker'].tolist()[:5]
     
-    # Get Data
-    finviz_url = 'https://finviz.com/quote.ashx?t='
-    news_tables = {}
-    
-    for ticker in tickers:
-        url = finviz_url + ticker
-        req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'}) 
-        resp = urlopen(req)    
-        html = BeautifulSoup(resp, features="lxml")
-        news_table = html.find(id='news-table')
-        news_tables[ticker] = news_table
-    
-    try:
-        for ticker in tickers:
-            df = news_tables[ticker]
-            df_tr = df.findAll('tr')
-            
-            for i, table_row in enumerate(df_tr):
-                a_text = table_row.a.text
-                td_text = table_row.td.text
-                td_text = td_text.strip()
-                if i == 2:
-                    break
-    except KeyError:
-        pass
-    
-    # Iterate through the news
-    parsed_news = []
-    for file_name, news_table in news_tables.items():
-        for x in news_table.findAll('tr'):
-            text = x.a.get_text() 
-            date_scrape = x.td.text.split()
-    
-            if len(date_scrape) == 1:
-                time = date_scrape[0]
-                
-            else:
-                date = date_scrape[0]
-                time = date_scrape[1]
-    
-            ticker = file_name.split('_')[0]
-            
-            parsed_news.append([ticker, date, time, text])
-            
-    # Sentiment Analysis
-    analyzer = SentimentIntensityAnalyzer()
-    
-    columns = ['Ticker', 'Date', 'Time', 'Headline']
-    news = pd.DataFrame(parsed_news, columns=columns)
-    scores = news['Headline'].apply(analyzer.polarity_scores).tolist()
-    
-    df_scores = pd.DataFrame(scores)
-    news = news.join(df_scores, rsuffix='_right')
-    
-    # View Data 
-    news['Date'] = pd.to_datetime(news.Date).dt.date
-    
-    unique_ticker = news['Ticker'].unique().tolist()
-    news_dict = {name: news.loc[news['Ticker'] == name] for name in unique_ticker}
-    
-    values = []
-    for ticker in tickers: 
-        dataframe = news_dict[ticker]
-        dataframe = dataframe.set_index('Ticker')
-        dataframe = dataframe.drop(columns = ['Headline'])
-        
-        mean = round(dataframe['compound'].mean(), 2)
-        values.append(mean)
-        
-    df = pd.DataFrame(list(zip(tickers, values)), columns =['Ticker', 'Mean Sentiment']) 
-    df = df.sort_values('Mean Sentiment', ascending=False)
-    
-    return df
+    return stocks
 
 def long_shorts():
     # Set up scraper
@@ -106,82 +101,8 @@ def long_shorts():
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
     stocks = stocks[1:]
-
-    tickers = stocks['Ticker'].tolist()
     
-    # Get Data
-    finviz_url = 'https://finviz.com/quote.ashx?t='
-    news_tables = {}
-    
-    for ticker in tickers:
-        url = finviz_url + ticker
-        req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'}) 
-        resp = urlopen(req)    
-        html = BeautifulSoup(resp, features="lxml")
-        news_table = html.find(id='news-table')
-        news_tables[ticker] = news_table
-    
-    try:
-        for ticker in tickers:
-            df = news_tables[ticker]
-            df_tr = df.findAll('tr')
-            
-            for i, table_row in enumerate(df_tr):
-                a_text = table_row.a.text
-                td_text = table_row.td.text
-                td_text = td_text.strip()
-                if i == 2:
-                    break
-    except KeyError:
-        pass
-    
-    # Iterate through the news
-    parsed_news = []
-    for file_name, news_table in news_tables.items():
-        for x in news_table.findAll('tr'):
-            text = x.a.get_text() 
-            date_scrape = x.td.text.split()
-    
-            if len(date_scrape) == 1:
-                time = date_scrape[0]
-                
-            else:
-                date = date_scrape[0]
-                time = date_scrape[1]
-    
-            ticker = file_name.split('_')[0]
-            
-            parsed_news.append([ticker, date, time, text])
-            
-    # Sentiment Analysis
-    analyzer = SentimentIntensityAnalyzer()
-    
-    columns = ['Ticker', 'Date', 'Time', 'Headline']
-    news = pd.DataFrame(parsed_news, columns=columns)
-    scores = news['Headline'].apply(analyzer.polarity_scores).tolist()
-    
-    df_scores = pd.DataFrame(scores)
-    news = news.join(df_scores, rsuffix='_right')
-    
-    # View Data 
-    news['Date'] = pd.to_datetime(news.Date).dt.date
-    
-    unique_ticker = news['Ticker'].unique().tolist()
-    news_dict = {name: news.loc[news['Ticker'] == name] for name in unique_ticker}
-    
-    values = []
-    for ticker in tickers: 
-        dataframe = news_dict[ticker]
-        dataframe = dataframe.set_index('Ticker')
-        dataframe = dataframe.drop(columns = ['Headline'])
-        
-        mean = round(dataframe['compound'].mean(), 2)
-        values.append(mean)
-        
-    df = pd.DataFrame(list(zip(tickers, values)), columns =['Ticker', 'Mean Sentiment']) 
-    df = df.sort_values('Mean Sentiment', ascending=True)
-    
-    return df
+    return stocks
 
 def int_buys():
     # Set up scraper
@@ -193,82 +114,8 @@ def int_buys():
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
     stocks = stocks[1:]
-
-    tickers = stocks['Ticker'].tolist()
     
-    # Get Data
-    finviz_url = 'https://finviz.com/quote.ashx?t='
-    news_tables = {}
-    
-    for ticker in tickers:
-        url = finviz_url + ticker
-        req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'}) 
-        resp = urlopen(req)    
-        html = BeautifulSoup(resp, features="lxml")
-        news_table = html.find(id='news-table')
-        news_tables[ticker] = news_table
-    
-    try:
-        for ticker in tickers:
-            df = news_tables[ticker]
-            df_tr = df.findAll('tr')
-            
-            for i, table_row in enumerate(df_tr):
-                a_text = table_row.a.text
-                td_text = table_row.td.text
-                td_text = td_text.strip()
-                if i == 2:
-                    break
-    except KeyError:
-        pass
-    
-    # Iterate through the news
-    parsed_news = []
-    for file_name, news_table in news_tables.items():
-        for x in news_table.findAll('tr'):
-            text = x.a.get_text() 
-            date_scrape = x.td.text.split()
-    
-            if len(date_scrape) == 1:
-                time = date_scrape[0]
-                
-            else:
-                date = date_scrape[0]
-                time = date_scrape[1]
-    
-            ticker = file_name.split('_')[0]
-            
-            parsed_news.append([ticker, date, time, text])
-            
-    # Sentiment Analysis
-    analyzer = SentimentIntensityAnalyzer()
-    
-    columns = ['Ticker', 'Date', 'Time', 'Headline']
-    news = pd.DataFrame(parsed_news, columns=columns)
-    scores = news['Headline'].apply(analyzer.polarity_scores).tolist()
-    
-    df_scores = pd.DataFrame(scores)
-    news = news.join(df_scores, rsuffix='_right')
-    
-    # View Data 
-    news['Date'] = pd.to_datetime(news.Date).dt.date
-    
-    unique_ticker = news['Ticker'].unique().tolist()
-    news_dict = {name: news.loc[news['Ticker'] == name] for name in unique_ticker}
-    
-    values = []
-    for ticker in tickers: 
-        dataframe = news_dict[ticker]
-        dataframe = dataframe.set_index('Ticker')
-        dataframe = dataframe.drop(columns = ['Headline'])
-        
-        mean = round(dataframe['compound'].mean(), 2)
-        values.append(mean)
-        
-    df = pd.DataFrame(list(zip(tickers, values)), columns =['Ticker', 'Mean Sentiment']) 
-    df = df.sort_values('Mean Sentiment', ascending=False)
-    
-    return df
+    return stocks
 
 def int_shorts():
     # Set up scraper
@@ -280,148 +127,10 @@ def int_shorts():
     stocks = pd.read_html(str(html))[-2]
     stocks.columns = stocks.iloc[0]
     stocks = stocks[1:]
+    
+    return stocks
 
-    tickers = stocks['Ticker'].tolist()
-    
-    # Get Data
-    finviz_url = 'https://finviz.com/quote.ashx?t='
-    news_tables = {}
-    
-    for ticker in tickers:
-        url = finviz_url + ticker
-        req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'}) 
-        resp = urlopen(req)    
-        html = BeautifulSoup(resp, features="lxml")
-        news_table = html.find(id='news-table')
-        news_tables[ticker] = news_table
-    
-    try:
-        for ticker in tickers:
-            df = news_tables[ticker]
-            df_tr = df.findAll('tr')
-            
-            for i, table_row in enumerate(df_tr):
-                a_text = table_row.a.text
-                td_text = table_row.td.text
-                td_text = td_text.strip()
-                if i == 2:
-                    break
-    except KeyError:
-        pass
-    
-    # Iterate through the news
-    parsed_news = []
-    for file_name, news_table in news_tables.items():
-        for x in news_table.findAll('tr'):
-            text = x.a.get_text() 
-            date_scrape = x.td.text.split()
-    
-            if len(date_scrape) == 1:
-                time = date_scrape[0]
-                
-            else:
-                date = date_scrape[0]
-                time = date_scrape[1]
-    
-            ticker = file_name.split('_')[0]
-            
-            parsed_news.append([ticker, date, time, text])
-            
-    # Sentiment Analysis
-    analyzer = SentimentIntensityAnalyzer()
-    
-    columns = ['Ticker', 'Date', 'Time', 'Headline']
-    news = pd.DataFrame(parsed_news, columns=columns)
-    scores = news['Headline'].apply(analyzer.polarity_scores).tolist()
-    
-    df_scores = pd.DataFrame(scores)
-    news = news.join(df_scores, rsuffix='_right')
-    
-    # View Data 
-    news['Date'] = pd.to_datetime(news.Date).dt.date
-    
-    unique_ticker = news['Ticker'].unique().tolist()
-    news_dict = {name: news.loc[news['Ticker'] == name] for name in unique_ticker}
-    
-    values = []
-    for ticker in tickers: 
-        dataframe = news_dict[ticker]
-        dataframe = dataframe.set_index('Ticker')
-        dataframe = dataframe.drop(columns = ['Headline'])
-        
-        mean = round(dataframe['compound'].mean(), 2)
-        values.append(mean)
-        
-    df = pd.DataFrame(list(zip(tickers, values)), columns =['Ticker', 'Mean Sentiment']) 
-    df = df.sort_values('Mean Sentiment', ascending=True)
-    
-    return df
-
-@app.route('/sms', methods = ['POST'])
-def sms():
-    try:
-        message_body = request.form['Body']
-        resp = MessagingResponse()
-        
-        stock = message_body
-        
-        # price 
-        price = si.get_live_price('{}'.format(message_body))
-        price = round(price, 2)
-
-        AvgGain= 15
-        AvgLoss= 5
-
-        maxStopBuy=round(price*((100-AvgLoss)/100), 2)
-        Target1RBuy=round(price*((100+AvgGain)/100),2)
-        Target2RBuy=round(price*(((100+(2*AvgGain))/100)),2)
-        Target3RBuy=round(price*(((100+(3*AvgGain))/100)),2)
-
-        maxStopShort=round(price*((100+AvgLoss)/100), 2)
-        Target1RShort=round(price*((100-AvgGain)/100),2)
-        Target2RShort=round(price*(((100-(2*AvgGain))/100)),2)
-        Target3RShort=round(price*(((100-(3*AvgGain))/100)),2)
-
-        change = str(round(((price-price)/price)*100, 4)) + '%'
-        
-        # Set up scraper
-        url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        webpage = urlopen(req).read()
-        html = soup(webpage, "html.parser")
-
-        stocks = pd.read_html(str(html))[-2]
-        stocks.columns = stocks.iloc[0]
-        stocks = stocks[1:]
-        stocks['Price'] = [f'{price}']
-        stocks['Change'] = [f'{change}']
-        stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
-        stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
-        stocks['Risk 3 Buy'] = [f'{Target3RBuy}']
-        stocks['Max Stop Buy'] = [f'{maxStopBuy}']
-        stocks['Risk 1 Short'] = [f'{Target1RShort}']
-        stocks['Risk 2 Short'] = [f'{Target2RShort}']
-        stocks['Risk 3 Short'] = [f'{Target3RShort}']
-        stocks['Max Stop Short'] = [f'{maxStopShort}']
-        # stocks['Resistance 1'] = [f'{}']
-        # stocks['Resistance 2'] = [f'{}']
-        # stocks['Resistance 3'] = [f'{}']
-        # stocks['Pivot'] = [f'{}']
-        # stocks['Support 1'] = [f'{}']
-        # stocks['Support 2'] = [f'{}']
-        # stocks['Support 3'] = [f'{}']
-        message = "\n"
-        for attr, val in zip(stocks.columns, stocks.iloc[0]):
-            message=message + f"{attr} : {val}\n"
-
-        resp.message(message)
-        return str(resp)
-    
-    except Exception as e:
-        resp.message(f'\n{e}')
-        return str(resp)
-
-@app.route('/screener', methods = ['POST'])
+@app.route('/', methods = ['POST'])
 def screener():
     try:
         message_body = request.form['Body']
@@ -429,25 +138,123 @@ def screener():
         
         lb_matches1 = ["long", "buys"]
         lb_matches2 = ["long", "buy"]
-        lb_matches3 = ["lb"]
 
         ls_matches1 = ["long", "shorts"]
         ls_matches2 = ["long", "short"]
-        ls_matches3 = ["ls"]
         
         ib_matches1 = ["intraday", "buys"]
         ib_matches2 = ["intraday", "buy"]
-        ib_matches3 = ["ib"]
-        ib_matches4 = ["today", "buy"]
-        ib_matches5 = ["today", "buys"]
+        ib_matches3 = ["today", "buy"]
+        ib_matches4 = ["today", "buys"]
         
         is_matches1 = ["intraday", "shorts"]
         is_matches2 = ["intraday", "short"]
-        is_matches3 = ["is"]
-        is_matches4 = ["today", "short"]
-        is_matches5 = ["today", "shorts"]
+        is_matches3 = ["today", "short"]
+        is_matches4 = ["today", "shorts"]
         
-        if all(x in message_body.lower() for x in lb_matches1) or all(x in message_body for x in lb_matches2) or all(x in message_body for x in lb_matches3):
+        try:
+            stock = message_body
+            
+            # price
+            price = si.get_live_price('{}'.format(message_body))
+            price = round(price, 2)
+
+            AvgGain= 15
+            AvgLoss= 5
+
+            maxStopBuy=round(price*((100-AvgLoss)/100), 2)
+            Target1RBuy=round(price*((100+AvgGain)/100),2)
+            Target2RBuy=round(price*(((100+(2*AvgGain))/100)),2)
+            Target3RBuy=round(price*(((100+(3*AvgGain))/100)),2)
+
+            maxStopShort=round(price*((100+AvgLoss)/100), 2)
+            Target1RShort=round(price*((100-AvgGain)/100),2)
+            Target2RShort=round(price*(((100-(2*AvgGain))/100)),2)
+            Target3RShort=round(price*(((100-(3*AvgGain))/100)),2)
+
+            change = str(round(((price-price)/price)*100, 4)) + '%'
+            
+            # Set up scraper
+            url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
+            req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            webpage = urlopen(req).read()
+            html = soup(webpage, "html.parser")
+
+            stocks = pd.read_html(str(html))[-2]
+            stocks.columns = stocks.iloc[0]
+            stocks = stocks[1:]
+            stocks['Price'] = [f'{price}']
+            stocks['Change'] = [f'{change}']
+            stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
+            stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
+            stocks['Risk 3 Buy'] = [f'{Target3RBuy}']
+            stocks['Max Stop Buy'] = [f'{maxStopBuy}']
+            stocks['Risk 1 Short'] = [f'{Target1RShort}']
+            stocks['Risk 2 Short'] = [f'{Target2RShort}']
+            stocks['Risk 3 Short'] = [f'{Target3RShort}']
+            stocks['Max Stop Short'] = [f'{maxStopShort}']
+            # stocks['Resistance 1'] = [f'{}']
+            # stocks['Resistance 2'] = [f'{}']
+            # stocks['Resistance 3'] = [f'{}']
+            # stocks['Pivot'] = [f'{}']
+            # stocks['Support 1'] = [f'{}']
+            # stocks['Support 2'] = [f'{}']
+            # stocks['Support 3'] = [f'{}']
+            message = "\n"
+            for attr, val in zip(stocks.columns, stocks.iloc[0]):
+                message=message + f"{attr} : {val}\n"
+        except:
+            pass
+
+        if message_body.lower() == 'news':
+            df = news()
+            headlines = df['Headlines'].tolist()
+            times = df['Time'].tolist()
+
+            message = "News:"
+            for time, headline in zip(times, headlines):
+                message += f"\n{time} : {headline}"
+
+        elif message_body.lower() == 'gainers':
+            df = get_top_stocks()
+            tickers = df['Ticker'].tolist()
+            prices = df['Last'].tolist()
+            changes = df['Change'].tolist()
+
+            message = "Top Gainers:"
+            for ticker, price, change in zip(tickers, prices, changes):
+                message += f"\n{ticker} : {price} : {change}"
+        
+        elif message_body.lower() == 'losers':
+            df = get_bottom_stocks()
+            tickers = df['Ticker'].tolist()
+            prices = df['Last'].tolist()
+            changes = df['Change'].tolist()
+
+            message = "Top Losers:"
+            for ticker, price, change in zip(tickers, prices, changes):
+                message += f"\n{ticker} : {price} : {change}"
+
+        elif message_body.lower() == 'futures':
+            df = get_top_stocks()
+            indices = df['Index'].tolist()
+            prices = df['Last'].tolist()
+            changes = df['Change'].tolist()
+
+            message = "Futures:"
+            for index, price, change in zip(indices, prices, changes):
+                message += f"\n{index} : {price} : {change}"
+
+        elif message_body.lower() == 'earnings':
+            df = get_bottom_stocks()
+            tickers = df['Ticker'].tolist()
+            dates = df['Date'].tolist()
+
+            message = "Earnings:"
+            for date, ticker in zip(dates, tickers):
+                message += f"\n{date} : {ticker}"
+
+        elif all(x in message_body.lower() for x in lb_matches1) or all(x in message_body for x in lb_matches2):
             df = long_buys()
             tickers = df['Ticker'].tolist()
             
@@ -456,7 +263,7 @@ def screener():
                 message += f"\n{tickers[i]}"
         
         
-        elif all(x in message_body.lower() for x in ls_matches1) or all(x in message_body for x in ls_matches2) or all(x in message_body for x in ls_matches3):
+        elif all(x in message_body.lower() for x in ls_matches1) or all(x in message_body for x in ls_matches2):
             df = long_shorts()
             tickers = df['Ticker'].tolist()
         
@@ -465,7 +272,7 @@ def screener():
                 message += f"\n{tickers[i]}"
         
         
-        elif all(x in message_body.lower() for x in ib_matches1) or all(x in message_body for x in ib_matches2) or all(x in message_body for x in ib_matches3)  or all(x in message_body for x in ib_matches4)  or all(x in message_body for x in ib_matches5):
+        elif all(x in message_body.lower() for x in ib_matches1) or all(x in message_body for x in ib_matches2) or all(x in message_body for x in ib_matches3)  or all(x in message_body for x in ib_matches4):
             df = int_buys()
             tickers = df['Ticker'].tolist()
             
@@ -473,7 +280,7 @@ def screener():
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
             
-        elif all(x in message_body.lower() for x in is_matches1) or all(x in message_body for x in is_matches2) or all(x in message_body for x in is_matches3) or all(x in message_body for x in is_matches4) or all(x in message_body for x in is_matches5):
+        elif all(x in message_body.lower() for x in is_matches1) or all(x in message_body for x in is_matches2) or all(x in message_body for x in is_matches3) or all(x in message_body for x in is_matches4):
             df = int_shorts()
             tickers = df['Ticker'].tolist()
             
