@@ -63,6 +63,7 @@ def get_futures():
     futures = pd.concat(frames)
     futures = futures.set_index('Index')
     futures = futures.dropna()
+    futures = futures.reset_index()
     return futures
 
 def news():
