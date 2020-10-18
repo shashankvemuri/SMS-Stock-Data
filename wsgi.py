@@ -287,10 +287,7 @@ def screener():
             message = "Stocks to Short Today:"
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
-        
-        else:
-            message = "Include (long or intraday) and (buys or shorts) in your message!"
-        
+
         resp.message(message)
         return str(resp)
     
