@@ -202,7 +202,7 @@ def screener():
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
 
-        elif message_body.lower() == 'help':
+        elif message_body.lower() == 'functions':
             message = """
             Texting Functions:
             \n Enter a ticker to get its information
