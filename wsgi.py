@@ -7,6 +7,42 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
+def recently_priced():
+    url = ("https://www.marketwatch.com/tools/ipo-calendar")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+
+    ipo = pd.read_html(str(html), attrs = {'class': 'table table--primary ranking table--overflow tool-table'})[0]
+    return ipo.head(20)
+
+def this_week_ipos():
+    url = ("https://www.marketwatch.com/tools/ipo-calendar")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+
+    ipo = pd.read_html(str(html), attrs = {'class': 'table table--primary ranking table--overflow tool-table'})[1]
+    return ipo
+
+def next_week_ipos():
+    url = ("https://www.marketwatch.com/tools/ipo-calendar")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+
+    ipo = pd.read_html(str(html), attrs = {'class': 'table table--primary ranking table--overflow tool-table'})[2]
+    return ipo
+
+def future_ipos():
+    url = ("https://www.marketwatch.com/tools/ipo-calendar")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+
+    ipo = pd.read_html(str(html), attrs = {'class': 'table table--primary ranking table--overflow tool-table'})[3]
+    return ipo.columns
+
 def get_top_stocks():
     url = ("https://finviz.com/")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -216,6 +252,11 @@ def screener():
             \n Enter "long shorts" to get long term stock shorts
             \n Enter "intraday buys" to get intraday stock buys
             \n Enter "intraday shorts" to get intraday stock shorts
+            \n Enter "future ipos" to get future ipos
+            \n Enter "this week ipos" to get the ipos for this week
+            \n Enter "next week ipos" to get the ipos for next week
+            \n Enter "recent ipos" to get recently ipo'd stocks
+            
                     """
 
         elif message_body.lower() == 'news':
@@ -226,6 +267,47 @@ def screener():
             message = "Market News:"
             for time, headline in zip(times, headlines):
                 message += f"\n{time} : {headline}"
+
+        elif message_body.lower() == 'future ipos':
+            df = future_ipos()
+            symbols = df['Proposed Symbol'].tolist()
+            prices = df['Price Range'].tolist()
+            shares = df['Shares'].tolist()
+
+            message = "Future IPOS:"
+            for symbol, price, share in zip(symbols, prices, shares):
+                message += f"\n{symbol} | {price} | {share}"
+
+        elif message_body.lower() == 'this week ipos':
+            df = this_week_ipos()
+            symbols = df['Proposed Symbol'].tolist()
+            prices = df['Price Range'].tolist()
+            shares = df['Shares'].tolist()
+
+            message = "This Week IPOS:"
+            for symbol, price, share in zip(symbols, prices, shares):
+                message += f"\n{symbol} | {price} | {share}"
+
+        elif message_body.lower() == 'next week ipos':
+            df = next_week_ipos()
+            symbols = df['Proposed Symbol'].tolist()
+            prices = df['Price Range'].tolist()
+            shares = df['Shares'].tolist()
+
+            message = "Next Week IPOS:"
+            for symbol, price, share in zip(symbols, prices, shares):
+                message += f"\n{symbol} | {price} | {share}"
+                
+        elif message_body.lower() == 'recent ipos':
+            df = next_week_ipos()
+            symbols = df['Symbol'].tolist()
+            prices = df['Price'].tolist()
+            shares = df['Shares'].tolist()
+            dates = df['IPO Date'].tolist()
+
+            message = "Recent IPOS:"
+            for symbol, price, share, date in zip(symbols, prices, shares, dates):
+                message += f"\n{symbol} | {price} | {share} | {date}"
 
         elif message_body.lower() == 'gainers':
             df = get_top_stocks()
