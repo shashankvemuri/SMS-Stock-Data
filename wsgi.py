@@ -111,7 +111,7 @@ def news():
     news = pd.read_html(str(html))[5]
     news.columns = ['0', 'Time', 'Headlines']
     news = news.drop(columns = ['0'])
-    return news.head(25)
+    return news.head(17)
 
 def long_buys():
     # Set up scraper
