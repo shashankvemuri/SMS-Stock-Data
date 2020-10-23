@@ -43,30 +43,6 @@ def future_ipos():
     ipo = pd.read_html(str(html), attrs = {'class': 'table table--primary ranking table--overflow tool-table'})[3]
     return ipo.columns
 
-def get_top_stocks():
-    url = ("https://finviz.com/")
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    html = BeautifulSoup(webpage, "html.parser")
-
-    ups = pd.read_html(str(html), attrs = {'class': 't-home-table'})[0]
-    ups.columns = ['Ticker', 'Last', 'Change', 'Volume', '4', 'Signal']
-    ups = ups.drop(columns = ['4'])
-    ups = ups.iloc[1:]
-    return ups
-
-def get_bottom_stocks():
-    url = ("https://finviz.com/")
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    html = BeautifulSoup(webpage, "html.parser")
-
-    downs = pd.read_html(str(html), attrs = {'class': 't-home-table'})[1]
-    downs.columns = ['Ticker', 'Last', 'Change', 'Volume', '4', 'Signal']
-    downs = downs.drop(columns = ['4'])
-    downs = downs.iloc[1:]
-    return downs
-
 def get_earnings():
     url = ("https://finviz.com/")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -165,6 +141,14 @@ def int_shorts():
     
     return stocks
 
+def get_top_stocks():
+    ups = si.get_day_gainers()
+    return ups
+
+def get_bottom_stocks():
+    downs = si.get_day_losers()
+    return downs
+
 @app.route('/', methods = ['POST'])
 def screener():
     try:
@@ -256,7 +240,6 @@ def screener():
             \n Enter "this week ipos" to get the ipos for this week
             \n Enter "next week ipos" to get the ipos for next week
             \n Enter "recent ipos" to get recently ipo'd stocks
-            
                     """
 
         elif message_body.lower() == 'news':
@@ -311,23 +294,25 @@ def screener():
 
         elif message_body.lower() == 'gainers':
             df = get_top_stocks()
-            tickers = df['Ticker'].tolist()
-            prices = df['Last'].tolist()
-            changes = df['Change'].tolist()
+            tickers = df['Symbol'].tolist()
+            prices = df['Price (Intraday)'].tolist()
+            changes = df['% Change'].tolist()
+            caps = df['Market Cap'].tolist()
 
             message = "Top Gainers:"
-            for ticker, price, change in zip(tickers, prices, changes):
-                message += f"\n{ticker} : {price} : {change}"
+            for ticker, price, change, cap in zip(tickers, prices, changes, caps):
+                message += f"\n{ticker} : {price} : {change} : {cap}"
         
         elif message_body.lower() == 'losers':
             df = get_bottom_stocks()
-            tickers = df['Ticker'].tolist()
-            prices = df['Last'].tolist()
-            changes = df['Change'].tolist()
+            tickers = df['Symbol'].tolist()
+            prices = df['Price (Intraday)'].tolist()
+            changes = df['% Change'].tolist()
+            caps = df['Market Cap'].tolist()
 
             message = "Top Losers:"
-            for ticker, price, change in zip(tickers, prices, changes):
-                message += f"\n{ticker} : {price} : {change}"
+            for ticker, price, change, cap in zip(tickers, prices, changes, caps):
+                message += f"\n{ticker} : {price} : {change} : {cap}"
 
         elif message_body.lower() == 'futures':
             df = get_futures()
