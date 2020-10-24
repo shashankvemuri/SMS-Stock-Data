@@ -297,22 +297,20 @@ def screener():
             tickers = df['Symbol'].tolist()
             prices = df['Price (Intraday)'].tolist()
             changes = df['% Change'].tolist()
-            caps = df['Market Cap'].tolist()
 
             message = "Top Gainers:"
-            for ticker, price, change, cap in zip(tickers, prices, changes, caps):
-                message += f"\n{ticker} : {price} : {change} : {cap}"
+            for ticker, price, change in zip(tickers, prices, changes):
+                message += f"\n{ticker} : {price} : {change}"
         
         elif message_body.lower() == 'losers':
             df = get_bottom_stocks()
             tickers = df['Symbol'].tolist()
             prices = df['Price (Intraday)'].tolist()
             changes = df['% Change'].tolist()
-            caps = df['Market Cap'].tolist()
 
             message = "Top Losers:"
-            for ticker, price, change, cap in zip(tickers, prices, changes, caps):
-                message += f"\n{ticker} : {price} : {change} : {cap}"
+            for ticker, price, change in zip(tickers, prices, changes):
+                message += f"\n{ticker} : {price} : {change}"
 
         elif message_body.lower() == 'futures':
             df = get_futures()
