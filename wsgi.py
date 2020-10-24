@@ -143,11 +143,11 @@ def int_shorts():
 
 def get_top_stocks():
     ups = si.get_day_gainers()
-    return ups
+    return ups.head(15)
 
 def get_bottom_stocks():
     downs = si.get_day_losers()
-    return downs
+    return downs.head(15)
 
 @app.route('/', methods = ['POST'])
 def screener():
