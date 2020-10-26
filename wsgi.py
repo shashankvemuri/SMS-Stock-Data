@@ -5,7 +5,7 @@ import pandas as pd
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from pandas_datareader import DataReader
+from pandas_datareader import data as pdr
 import datetime
 
 app = Flask(__name__)
@@ -194,14 +194,12 @@ def screener():
             Target2RShort=round(price*(((100-(2*AvgGain))/100)),2)
             Target3RShort=round(price*(((100-(3*AvgGain))/100)),2)
 
-            change = str(round(((price-price)/price)*100, 4)) + '%'
-
             finwiz_url = 'https://finviz.com/quote.ashx?t='
             news_tables = {}
             
             url = finwiz_url + stock
-            req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'}) 
-            response = urlopen(req)    
+            req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'})
+            response = urlopen(req)
             html = BeautifulSoup(response, features="lxml")
             news_table = html.find(id='news-table')
             news_tables[stock] = news_table
@@ -211,7 +209,7 @@ def screener():
             # Iterate through the news
             for file_name, news_table in news_tables.items():
                 for x in news_table.findAll('tr'):
-                    text = x.a.get_text() 
+                    text = x.a.get_text()
                     date_scrape = x.td.text.split()
             
                     if len(date_scrape) == 1:
@@ -244,7 +242,7 @@ def screener():
             start_date = datetime.date(1980, 1, 1)
             end_date = datetime.date.today()
 
-            df = DataReader(ticker, 'yahoo', start_date, end_date).dropna()
+            df = pdr.get_data_yahoo(ticker, start_date, end_date).dropna()
             
             df.drop(df[df["Volume"]<1000].index, inplace=True)
             
@@ -280,7 +278,7 @@ def screener():
             limit = 10
             
             #calculates sma and creates a column in the dataframe
-            df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
+            df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean()
             df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
             
             mean =df["PC"].mean()
@@ -293,6 +291,9 @@ def screener():
             mean = round(mean, 2)
             stdev = round(stdev, 2)
 
+            last_close = df['Close'].tolist()[-1]
+            change = str(round(((price-last_close)/last_close)*100, 4)) + '%'
+
             # Set up scraper
             url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -304,12 +305,12 @@ def screener():
             stocks = stocks[1:]
             stocks['Price'] = [f'{price}']
             stocks['Change'] = [f'{change}']
-            stocks['Last Green Line Value'] = [f'{lastGLV}']
+            stocks['Last Green Line Value'] = [f'{round(lastGLV, 2)}']
             stocks['Current Deviation from 50 SMA'] = [f'{current}']
             stocks["Yesterday's Deviation from 50 SMA"] = [f'{yday}']
             stocks['Mean Deviation from 50 SMA'] = [f'{mean}']
             stocks['Standard Deviation from 50 SMA'] = [f'{stdev}']
-            stocks['Sentiment'] = [f'{sentiment}']
+            stocks['News Sentiment'] = [f'{sentiment}']
             stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
             stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
             stocks['Risk 3 Buy'] = [f'{Target3RBuy}']
@@ -332,7 +333,7 @@ def screener():
             message=message + "------------------------\n"
             message=message + "Recent News:\n"
 
-            for new, time, date in zip(news[:5], times[:5], dates[:5]):
+            for new, time, date in zip(news[:7], times[:7], dates[:7]):
                 message=message + f"{date} {time} : {new}\n"
 
         elif message_body.lower() == 'functions':
