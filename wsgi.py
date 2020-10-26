@@ -5,8 +5,10 @@ import pandas as pd
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import yfinance as yf
+import datetime as dt
 from pandas_datareader import data as pdr
-import datetime
+yf.pdr_override()
 
 app = Flask(__name__)
 
@@ -242,7 +244,11 @@ def screener():
             start_date = datetime.date(1980, 1, 1)
             end_date = datetime.date.today()
 
-            df = pdr.get_data_yahoo(ticker, start_date, end_date).dropna()
+            num_of_years = 40
+            start_date = dt.datetime.now() - dt.timedelta(int(365.25 * num_of_years))
+            end_date = dt.datetime.now()
+
+            df = pdr.get_data_yahoo(stock, start_date, end_date).dropna()
             
             df.drop(df[df["Volume"]<1000].index, inplace=True)
             
@@ -276,22 +282,20 @@ def screener():
             
             sma = 50
             limit = 10
-            
-            #calculates sma and creates a column in the dataframe
-            df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean()
+
+            df = pdr.get_data_yahoo(stock, start_date, end_date).dropna()
+            sma = 50
+            limit = 10
+
+            df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
             df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
-            
-            mean =df["PC"].mean()
-            stdev=df["PC"].std()
-            current=df["PC"][-1]
-            yday=df["PC"][-2]
 
-            yday = round(yday, 2)
-            current = round(current, 2)
-            mean = round(mean, 2)
-            stdev = round(stdev, 2)
+            mean = round(df["PC"].mean(), 2)
+            stdev= round(df["PC"].std(), 2)
+            current = round(df["PC"][-1], 2)
+            yday = round(df["PC"][-2], 2)
 
-            last_close = df['Close'].tolist()[-1]
+            last_close = df['Close'].tolist()[-2]
             change = str(round(((price-last_close)/last_close)*100, 4)) + '%'
 
             # Set up scraper

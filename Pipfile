@@ -16,6 +16,7 @@ pandas-datareader = "*"
 beautifulsoup4 = "*"
 nltk = "*"
 datetime = "*"
+yfinance = "*"
 
 [requires]
 python_version = "3.8"
