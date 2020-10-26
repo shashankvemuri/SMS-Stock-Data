@@ -337,7 +337,7 @@ def screener():
             message=message + "------------------------\n"
             message=message + "Recent News:\n"
 
-            for new, time, date in zip(news[:7], times[:7], dates[:7]):
+            for new, time, date in zip(news[:5], times[:5], dates[:5]):
                 message=message + f"{date} {time} : {new}\n"
 
         elif message_body.lower() == 'functions':
