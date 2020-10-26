@@ -241,9 +241,6 @@ def screener():
             times = dataframe['time'].tolist()
             dates = dataframe['date'].tolist()
 
-            start_date = datetime.date(1980, 1, 1)
-            end_date = datetime.date.today()
-
             num_of_years = 40
             start_date = dt.datetime.now() - dt.timedelta(int(365.25 * num_of_years))
             end_date = dt.datetime.now()
