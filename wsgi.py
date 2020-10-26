@@ -237,7 +237,7 @@ def screener():
             dataframe = dataframe.set_index('ticker')
             
             sentiment = round(dataframe['compound'].mean(), 2)
-            news = dataframe['headline'].tolist()
+            stock_headlines = dataframe['headline'].tolist()
             times = dataframe['time'].tolist()
             dates = dataframe['date'].tolist()
 
@@ -334,7 +334,7 @@ def screener():
             message=message + "------------------------\n"
             message=message + "Recent News:\n"
 
-            for new, time, date in zip(news[:5], times[:5], dates[:5]):
+            for new, time, date in zip(stock_headlines[:5], times[:5], dates[:5]):
                 message=message + f"{date} {time} : {new}\n"
 
         elif message_body.lower() == 'functions':
