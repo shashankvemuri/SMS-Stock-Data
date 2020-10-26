@@ -15,6 +15,7 @@ flask = "*"
 pandas-datareader = "*"
 beautifulsoup4 = "*"
 nltk = "*"
+datetime = "*"
 
 [requires]
 python_version = "3.8"

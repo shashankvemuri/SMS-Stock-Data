@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from pandas_datareader import DataReader
+import datetime
 
 app = Flask(__name__)
 
@@ -198,12 +199,12 @@ def screener():
             finwiz_url = 'https://finviz.com/quote.ashx?t='
             news_tables = {}
             
-            url = finwiz_url + ticker
+            url = finwiz_url + stock
             req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'}) 
             response = urlopen(req)    
             html = BeautifulSoup(response, features="lxml")
             news_table = html.find(id='news-table')
-            news_tables[ticker] = news_table
+            news_tables[stock] = news_table
             
             parsed_news = []
             
@@ -236,6 +237,12 @@ def screener():
             dataframe = dataframe.set_index('ticker')
             
             sentiment = round(dataframe['compound'].mean(), 2)
+            news = dataframe['headline'].tolist()
+            times = dataframe['time'].tolist()
+            dates = dataframe['date'].tolist()
+
+            start_date = datetime.date(1980, 1, 1)
+            end_date = datetime.date.today()
 
             df = DataReader(ticker, 'yahoo', start_date, end_date).dropna()
             
@@ -269,6 +276,23 @@ def screener():
                             lastGLV=curentGLV
                             counter=0
             
+            sma = 50
+            limit = 10
+            
+            #calculates sma and creates a column in the dataframe
+            df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
+            df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
+            
+            mean =df["PC"].mean()
+            stdev=df["PC"].std()
+            current=df["PC"][-1]
+            yday=df["PC"][-2]
+
+            yday = round(yday, 2)
+            current = round(current, 2)
+            mean = round(mean, 2)
+            stdev = round(stdev, 2)
+
             # Set up scraper
             url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -281,6 +305,10 @@ def screener():
             stocks['Price'] = [f'{price}']
             stocks['Change'] = [f'{change}']
             stocks['Last Green Line Value'] = [f'{lastGLV}']
+            stocks['Current Deviation from 50 SMA'] = [f'{current}']
+            stocks["Yesterday's Deviation from 50 SMA"] = [f'{yday}']
+            stocks['Mean Deviation from 50 SMA'] = [f'{mean}']
+            stocks['Standard Deviation from 50 SMA'] = [f'{stdev}']
             stocks['Sentiment'] = [f'{sentiment}']
             stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
             stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
@@ -300,6 +328,12 @@ def screener():
             message = "\n"
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
+
+            message=message + "------------------------\n"
+            message=message + "Recent News:\n"
+
+            for new, time, date in zip(news[:5], times[:5], dates[:5]):
+                message=message + f"{date} {time} : {new}\n"
 
         elif message_body.lower() == 'functions':
             message = """
