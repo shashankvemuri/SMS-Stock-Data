@@ -96,7 +96,7 @@ def news():
 
 def long_buys():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=an_recom_holdbetter,cap_smallover,fa_epsyoy_o20,fa_epsyoy1_o25,fa_netmargin_pos,fa_roe_o10,fa_salesqoq_o20,geo_usa,ind_stocksonly,sh_avgvol_o100,sh_insttrans_pos,sh_price_o5,ta_highlow52w_a30h,ta_perf_52w30o,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa,targetprice_above&ft=4&o=change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
+    url = ("https://finviz.com/screener.ashx?v=111&f=an_recom_holdbetter,cap_midover,fa_epsqoq_o20,fa_epsyoy_pos,fa_epsyoy1_o25,fa_grossmargin_pos,fa_roe_pos,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o300,sh_insttrans_pos,sh_price_o10,ta_perf_52w30o,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
@@ -110,32 +110,6 @@ def long_buys():
 def long_shorts():
     # Set up scraper
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,geo_usa,ind_stocksonly,sh_avgvol_o300,sh_price_o5,ta_sma20_pb,ta_sma200_pa100,targetprice_below&ft=4&o=-change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    html = BeautifulSoup(webpage, "html.parser")
-    
-    stocks = pd.read_html(str(html))[-2]
-    stocks.columns = stocks.iloc[0]
-    stocks = stocks[1:]
-    
-    return stocks
-
-def int_buys():
-    # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,geo_usa,ind_stocksonly,ipodate_prev3yrs,sh_avgvol_o500,sh_price_o15,ta_changeopen_u,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    html = BeautifulSoup(webpage, "html.parser")
-    
-    stocks = pd.read_html(str(html))[-2]
-    stocks.columns = stocks.iloc[0]
-    stocks = stocks[1:]
-    
-    return stocks
-
-def int_shorts():
-    # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,geo_usa,ind_stocksonly,sh_price_o4,ta_change_u10,ta_rsi_ob60,ta_sma200_pa100&ft=4&o=-change&ar=180&c=0,1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,65,66,67,68,69")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
@@ -165,16 +139,6 @@ def screener():
 
         ls_matches1 = ["long", "shorts"]
         ls_matches2 = ["long", "short"]
-        
-        ib_matches1 = ["intraday", "buys"]
-        ib_matches2 = ["intraday", "buy"]
-        ib_matches3 = ["today", "buy"]
-        ib_matches4 = ["today", "buys"]
-        
-        is_matches1 = ["intraday", "shorts"]
-        is_matches2 = ["intraday", "short"]
-        is_matches3 = ["today", "short"]
-        is_matches4 = ["today", "shorts"]
         
         if message_body in si.tickers_sp500() or message_body in si.tickers_nasdaq() or message_body in si.tickers_other():
             stock = message_body
@@ -348,8 +312,6 @@ def screener():
             \n Enter "earnings" to get upcoming earning dates
             \n Enter "long buys" to get long term stock buys
             \n Enter "long shorts" to get long term stock shorts
-            \n Enter "intraday buys" to get intraday stock buys
-            \n Enter "intraday shorts" to get intraday stock shorts
             \n Enter "future ipos" to get future ipos
             \n Enter "this week ipos" to get the ipos for this week
             \n Enter "next week ipos" to get the ipos for next week
@@ -457,23 +419,6 @@ def screener():
             tickers = df['Ticker'].tolist()
         
             message = "Stocks to Short (Long Term):"
-            for i in range(len(tickers)):
-                message += f"\n{tickers[i]}"
-        
-        
-        elif all(x in message_body.lower() for x in ib_matches1) or all(x in message_body for x in ib_matches2) or all(x in message_body for x in ib_matches3)  or all(x in message_body for x in ib_matches4):
-            df = int_buys()
-            tickers = df['Ticker'].tolist()
-            
-            message = "Stocks to Buy Today:"
-            for i in range(len(tickers)):
-                message += f"\n{tickers[i]}"
-            
-        elif all(x in message_body.lower() for x in is_matches1) or all(x in message_body for x in is_matches2) or all(x in message_body for x in is_matches3) or all(x in message_body for x in is_matches4):
-            df = int_shorts()
-            tickers = df['Ticker'].tolist()
-            
-            message = "Stocks to Short Today:"
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
 
