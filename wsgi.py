@@ -330,6 +330,7 @@ def screener():
             \n Enter "earnings" to get upcoming earning dates
             \n Enter "long buys" to get long term stock buys
             \n Enter "long shorts" to get long term stock shorts
+            \n Enter "quality growth buys" to get quality growth stocks
             \n Enter "future ipos" to get future ipos
             \n Enter "this week ipos" to get the ipos for this week
             \n Enter "next week ipos" to get the ipos for next week
