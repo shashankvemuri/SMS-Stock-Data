@@ -156,7 +156,7 @@ def screener():
         q_matches1 = ['quality', 'buys']
         q_matches2 = ['quality', 'buys']
         q_matches3 = ['growth', 'buys']
-        q_matches3 = ['growth', 'buys']
+        q_matches4 = ['growth', 'buys']
         
         if message_body in si.tickers_sp500() or message_body in si.tickers_nasdaq() or message_body in si.tickers_other():
             stock = message_body
