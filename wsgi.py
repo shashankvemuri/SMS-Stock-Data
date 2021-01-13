@@ -94,6 +94,19 @@ def news():
     news = news.drop(columns = ['0'])
     return news.head(17)
 
+def quality():
+    # Set up scraper
+    url = ("https://finviz.com/screener.ashx?v=151&f=fa_epsqoq_o15,fa_epsyoy_pos,fa_epsyoy1_o25,fa_grossmargin_pos,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o300,sh_insttrans_pos,sh_price_o10,ta_perf_52w50o,ta_sma200_pa,ta_sma50_pa&ft=4&o=-marketcap")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+    
+    stocks = pd.read_html(str(html))[-2]
+    stocks.columns = stocks.iloc[0]
+    stocks = stocks[1:]
+    
+    return stocks
+
 def long_buys():
     # Set up scraper
     url = ("https://finviz.com/screener.ashx?v=111&f=an_recom_holdbetter,cap_midover,fa_epsqoq_o20,fa_epsyoy_o20,fa_epsyoy1_o25,fa_grossmargin_pos,fa_roe_pos,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o300,sh_insttrans_pos,sh_price_o10,ta_perf_52w50o,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=change&ar=180")
@@ -139,6 +152,11 @@ def screener():
 
         ls_matches1 = ["long", "shorts"]
         ls_matches2 = ["long", "short"]
+        
+        q_matches1 = ['quality', 'buys']
+        q_matches2 = ['quality', 'buys']
+        q_matches3 = ['growth', 'buys']
+        q_matches3 = ['growth', 'buys']
         
         if message_body in si.tickers_sp500() or message_body in si.tickers_nasdaq() or message_body in si.tickers_other():
             stock = message_body
@@ -413,6 +431,13 @@ def screener():
             for i in range(len(tickers)):
                 message += f"\n{tickers[i]}"
         
+        elif all(x in message_body.lower() for x in q_matches1) or all(x in message_body for x in q_matches2) or all(x in message_body for x in q_matches3) or all(x in message_body for x in q_matches4):
+            df = quality()
+            tickers = df['Ticker'].tolist()
+        
+            message = "Quality Growth Stocks (Long Term):"
+            for i in range(len(tickers)):
+                message += f"\n{tickers[i]}"
         
         elif all(x in message_body.lower() for x in ls_matches1) or all(x in message_body for x in ls_matches2):
             df = long_shorts()
