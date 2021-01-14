@@ -428,20 +428,20 @@ def screener():
             df = long_buys()
             tickers = df['Ticker'].tolist()
             
-            message = "Stocks to Buy (Long Term):\n[{0}]".format( ', '.join(map(str, tickers)))))
+            message = "Stocks to Buy (Long Term):\n[{0}]".format( ', '.join(map(str, tickers)))
 
         
         elif all(x in message_body.lower() for x in q_matches1) or all(x in message_body for x in q_matches2) or all(x in message_body for x in q_matches3) or all(x in message_body for x in q_matches4):
             df = quality()
             tickers = df['Ticker'].tolist()
         
-            message = "Quality Growth Stocks (Long Term):\n[{0}]".format( ', '.join(map(str, tickers)))))
+            message = "Quality Growth Stocks (Long Term):\n[{0}]".format( ', '.join(map(str, tickers)))
         
         elif all(x in message_body.lower() for x in ls_matches1) or all(x in message_body for x in ls_matches2):
             df = long_shorts()
             tickers = df['Ticker'].tolist()
         
-            message = "Stocks to Short (Long Term):\n[{0}]".format( ', '.join(map(str, tickers)))))
+            message = "Stocks to Short (Long Term):\n[{0}]".format( ', '.join(map(str, tickers)))
 
         resp.message(message)
         return str(resp)
