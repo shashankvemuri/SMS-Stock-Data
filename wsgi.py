@@ -430,12 +430,30 @@ def screener():
             tickers = df['Ticker'].tolist()
             
             message = "Stocks to Buy (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
+            
+        elif all(x in message_body.lower() for x in ['rs']) or all(x in message_body.lower() for x in ['strength']):
+            df = long_buys()
+            tickers = df['Ticker'].tolist()
+            
+            message = "Stocks Showing RS:\n{0}".format( ', '.join(map(str, tickers)))
+            
+        elif all(x in message_body.lower() for x in ['alpha']):
+            df = long_buys()
+            tickers = df['Ticker'].tolist()
+            
+            message = "Alpha Setup:\n{0}".format( ', '.join(map(str, tickers)))
+            
+        elif all(x in message_body.lower() for x in ['squeeze']) or all(x in message_body.lower() for x in ['squeezes']):
+            df = long_buys()
+            tickers = df['Ticker'].tolist()
+            
+            message = "Short Squeeze Setup:\n{0}".format( ', '.join(map(str, tickers)))
         
         elif all(x in message_body.lower() for x in ['universe']):
-            df = quality()
+            df = universe()
             tickers = df['Ticker'].tolist()
         
-            message = "Universe Growth Stocks (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
+            message = "Universe Growth Stocks:\n{0}".format( ', '.join(map(str, tickers)))
 
         resp.message(message)
         return str(resp)
