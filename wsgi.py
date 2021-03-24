@@ -120,6 +120,45 @@ def long_buys():
     
     return stocks
 
+def strength():
+    # Set up scraper
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o20,fa_epsyoy_o20,fa_epsyoy1_pos,fa_grossmargin_pos,fa_roe_pos,fa_salesqoq_o20,sh_avgvol_o200,sh_price_o10,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-high52w&ar=180")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+    
+    stocks = pd.read_html(str(html))[-2]
+    stocks.columns = stocks.iloc[0]
+    stocks = stocks[1:]
+    
+    return stocks
+
+def alpha():
+    # Set up scraper
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,ind_stocksonly,ipodate_prev3yrs,sh_avgvol_o500,sh_price_o15,ta_changeopen_u,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-relativevolume&ar=180")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+    
+    stocks = pd.read_html(str(html))[-2]
+    stocks.columns = stocks.iloc[0]
+    stocks = stocks[1:]
+    
+    return stocks
+
+def squeeze():
+    # Set up scraper
+    url = ("https://finviz.com/screener.ashx?v=151&f=fa_epsyoy_o20,ind_stocksonly,sh_avgvol_o300,sh_float_u20,sh_price_o15,sh_short_o10,ta_changeopen_u,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-shortinterestratio&ar=180")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+    
+    stocks = pd.read_html(str(html))[-2]
+    stocks.columns = stocks.iloc[0]
+    stocks = stocks[1:]
+    
+    return stocks
+
 def get_top_stocks():
     ups = si.get_day_gainers()
     return ups.head(15)
@@ -292,7 +331,7 @@ def screener():
             \n Enter "universe" to get quality growth stocks
             \n Enter "strength" to get stocks showing RS
             \n Enter "alpha" to get potential setups
-            \n Enter "squeezes" to get potential short squeezes
+            \n Enter "squeeze" to get potential short squeezes
             \n Enter "future ipos" to get future ipos
             \n Enter "this week ipos" to get the ipos for this week
             \n Enter "next week ipos" to get the ipos for next week
