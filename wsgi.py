@@ -96,7 +96,7 @@ def news():
 
 def quality():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o20,fa_epsyoy_o20,fa_epsyoy1_o25,fa_salesqoq_o25,sh_avgvol_o100,sh_instown_o30,sh_price_o5,ta_perf_52wup,ta_sma200_pa&ft=4&o=-perf52w")
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o25,fa_epsyoy_o25,fa_epsyoy1_o25,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_price_o10&ft=4&o=-high52w&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
