@@ -109,20 +109,7 @@ def quality():
 
 def long_buys():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=111&f=cap_midover,fa_epsyoy1_o20,fa_salesqoq_o20,ind_stocksonly,ipodate_prev3yrs,sh_avgvol_o500,sh_price_o15,ta_changeopen_u,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-volume")
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    html = BeautifulSoup(webpage, "html.parser")
-    
-    stocks = pd.read_html(str(html))[-2]
-    stocks.columns = stocks.iloc[0]
-    stocks = stocks[1:]
-    
-    return stocks
-
-def long_shorts():
-    # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_neg,fa_epsyoy_neg,fa_epsyoy1_neg,fa_salesqoq_neg,ind_stocksonly,sh_avgvol_o300,sh_price_o5,ta_sma20_pb,ta_sma200_pa100,targetprice_below&ft=4&o=-change&ar=180")
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsqoq_o25,fa_epsyoy_o20,fa_epsyoy1_o25,fa_grossmargin_pos,fa_roe_o15,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_price_o10,ta_perf_52wup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-relativevolume&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
@@ -146,17 +133,6 @@ def screener():
     try:
         message_body = request.form['Body']
         resp = MessagingResponse()
-        
-        lb_matches1 = ["long", "buys"]
-        lb_matches2 = ["long", "buy"]
-
-        ls_matches1 = ["long", "shorts"]
-        ls_matches2 = ["long", "short"]
-        
-        q_matches1 = ['quality', 'buys']
-        q_matches2 = ['quality', 'buys']
-        q_matches3 = ['growth', 'buys']
-        q_matches4 = ['growth', 'buys']
         
         if message_body in si.tickers_sp500() or message_body in si.tickers_nasdaq() or message_body in si.tickers_other():
             stock = message_body
@@ -278,7 +254,7 @@ def screener():
             change = str(round(((price-last_close)/last_close)*100, 4)) + '%'
 
             # Set up scraper
-            url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,7,14,17,18,23,26,27,28,29,42,43,44,45,46,47,48,49,51,52,53,54,57,58,59,60,62,63,64,67,68,69")
+            url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,10,16,17,18,22,23,25,27,28,29,31,33,39,42,43,46,47,53,54,57,58,60,63,64,65,66,67,68,69")
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             webpage = urlopen(req).read()
             html = BeautifulSoup(webpage, "html.parser")
@@ -288,27 +264,11 @@ def screener():
             stocks = stocks[1:]
             stocks['Price'] = [f'{price}']
             stocks['Change'] = [f'{change}']
-            stocks['Last Green Line Value'] = [f'{round(lastGLV, 2)}']
             stocks['Mean Dev. from 50 SMA'] = [f'{mean}%']
             stocks['Stdev. from 50 SMA'] = [f'{stdev}%']
             stocks["Yday Dev. from 50 SMA"] = [f'{yday}%']
             stocks['Curr Dev. from 50 SMA'] = [f'{current}%']
             stocks['News Sentiment'] = [f'{sentiment}']
-            stocks['Risk 1 Buy'] = [f'{Target1RBuy}']
-            stocks['Risk 2 Buy'] = [f'{Target2RBuy}']
-            stocks['Risk 3 Buy'] = [f'{Target3RBuy}']
-            stocks['Max Stop Buy'] = [f'{maxStopBuy}']
-            stocks['Risk 1 Short'] = [f'{Target1RShort}']
-            stocks['Risk 2 Short'] = [f'{Target2RShort}']
-            stocks['Risk 3 Short'] = [f'{Target3RShort}']
-            stocks['Max Stop Short'] = [f'{maxStopShort}']
-            # stocks['Resistance 1'] = [f'{}']
-            # stocks['Resistance 2'] = [f'{}']
-            # stocks['Resistance 3'] = [f'{}']
-            # stocks['Pivot'] = [f'{}']
-            # stocks['Support 1'] = [f'{}']
-            # stocks['Support 2'] = [f'{}']
-            # stocks['Support 3'] = [f'{}']
             message = "\n"
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
@@ -328,9 +288,11 @@ def screener():
             \n Enter "losers" to get today's top losers
             \n Enter "futures" to get futures index data
             \n Enter "earnings" to get upcoming earning dates
-            \n Enter "long buys" to get long term stock buys
-            \n Enter "long shorts" to get long term stock shorts
-            \n Enter "quality growth buys" to get quality growth stocks
+            \n Enter "buys" to get long term stock buys
+            \n Enter "universe" to get quality growth stocks
+            \n Enter "strength" to get stocks showing RS
+            \n Enter "alpha" to get potential setups
+            \n Enter "squeezes" to get potential short squeezes
             \n Enter "future ipos" to get future ipos
             \n Enter "this week ipos" to get the ipos for this week
             \n Enter "next week ipos" to get the ipos for next week
@@ -424,24 +386,17 @@ def screener():
             for i in range(len(df)):
                 message += f"\n{df.iloc[i]}"
 
-        elif all(x in message_body.lower() for x in lb_matches1) or all(x in message_body for x in lb_matches2):
+        elif all(x in message_body.lower() for x in ['buy']) or all(x in message_body.lower() for x in ['buys']):
             df = long_buys()
             tickers = df['Ticker'].tolist()
             
             message = "Stocks to Buy (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
-
         
-        elif all(x in message_body.lower() for x in q_matches1) or all(x in message_body for x in q_matches2) or all(x in message_body for x in q_matches3) or all(x in message_body for x in q_matches4):
+        elif all(x in message_body.lower() for x in ['universe']):
             df = quality()
             tickers = df['Ticker'].tolist()
         
-            message = "Quality Growth Stocks (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
-        
-        elif all(x in message_body.lower() for x in ls_matches1) or all(x in message_body for x in ls_matches2):
-            df = long_shorts()
-            tickers = df['Ticker'].tolist()
-        
-            message = "Stocks to Short (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
+            message = "Universe Growth Stocks (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
 
         resp.message(message)
         return str(resp)
