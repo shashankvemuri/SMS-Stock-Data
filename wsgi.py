@@ -626,7 +626,7 @@ def screener():
             else:
                 action = "N/A"
             
-            message=message + ('; Action: ' + action)
+            message=message + ('\nAction: ' + action)
             message=message + buy_message
 
         elif message_body.lower() == 'functions':
