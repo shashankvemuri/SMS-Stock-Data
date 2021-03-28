@@ -614,7 +614,7 @@ def screener():
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
             
-            rating, buy_message = buy_rating()
+            rating, buy_message = buy_rating(message_body)
             message=message + "------------------------\n"
             message=message + f"Buy Rating for {ticker} is {rating}"
             message=message + buy_message
