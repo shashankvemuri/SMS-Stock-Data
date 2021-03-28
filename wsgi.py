@@ -8,9 +8,328 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import yfinance as yf
 import datetime as dt
 from pandas_datareader import data as pdr
+
+import talib
+import requests
+from bs4 import BeautifulSoup as bs
+
 yf.pdr_override()
 
 app = Flask(__name__)
+
+# Metrics of data needed from finviz.com
+metrics = ['Sales Q/Q', 'EPS Q/Q', 'EPS next Y', 'EPS this Y', 'Gross Margin', 'ROE', 'Rel Volume']
+
+# Using beautifulsoup to find finviz metrics specifified
+def fundamental_metrics(soup, metrics):
+    return soup.find(text = metrics).find_next(class_='snapshot-td2').text
+   
+# Using beautifulsoup to get/clean finviz metrics specifified
+def get_finviz_data(ticker):
+    try:
+        url = (f"http://finviz.com/quote.ashx?t={ticker}")
+        headers_dictionary = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0'}
+        soup = bs(requests.get(url,headers=headers_dictionary).content, features="lxml")
+        
+        finviz_dict = {}        
+        for m in metrics:   
+            finviz_dict[m] = fundamental_metrics(soup,m)
+        
+        for key, value in finviz_dict.items():
+            # replace percentages
+            if (value[-1]=='%'):
+                finviz_dict[key] = float(value[:-1])
+            try:
+                finviz_dict[key] = float(finviz_dict[key])
+            except:
+                finviz_dict[key] = 0 
+
+    except Exception as e:
+        print (f'the following error has occured while retrieving finviz data \n{e}')        
+    
+    return finviz_dict
+
+def buy_rating(ticker):
+    try:
+        start = dt.date.today() - dt.timedelta(days = 365)
+        end = dt.date.today()
+        
+        price = si.get_live_price(ticker)
+        buy_rating = 0
+        
+        df = pdr.get_data_yahoo(ticker, start, end)
+        
+        df['% Change'] = df['Adj Close'].pct_change()
+        df['EMA_4_H'] = talib.EMA(df['High'], timeperiod=4)
+        
+        sma = [10, 30, 50, 150, 200]
+        for x in sma:
+            df["SMA_"+str(x)] = round(df['Adj Close'].rolling(window=x).mean(), 2)
+            
+        ema = [2, 3, 4, 5, 8, 21, 30]
+        for x in ema:
+            df["EMA_"+str(x)] = talib.EMA(df['Adj Close'], timeperiod=x)
+        
+        # Storing required values
+        moving_average_50 = df["SMA_50"][-1]
+        moving_average_150 = df["SMA_150"][-1]
+        moving_average_200 = df["SMA_200"][-1]
+        low_of_52week = round(min(df["Low"][-260:]), 2)
+        high_of_52week = round(max(df["High"][-260:]), 2)
+        
+        # retrieving finviz values
+        finviz_data = get_finviz_data(ticker)
+        sales_q = finviz_data['Sales Q/Q']
+        eps_q = finviz_data['EPS Q/Q']                  
+        eps_next_year = finviz_data['EPS next Y']
+        eps_this_year = finviz_data['EPS this Y']
+        gross_margin = finviz_data['Gross Margin']
+        roe = finviz_data['ROE']
+        rel_volume = finviz_data['Rel Volume']
+    
+        upper, middle, lower = talib.BBANDS(df["Adj Close"], 15, 2, 2)
+    
+        dcr = 100*(df["Adj Close"][-1] - df["Low"][-1])/(df["High"][-1] - df["Low"][-1])
+        wcr = (100*(df["Adj Close"][-1] - df['Low'].rolling(window=5).min())/(df['High'].rolling(window=5).max() - df['Low'].rolling(window=5).min()))[-1]
+        volatility = ((((df['High'].rolling(window=10).max())/(df['Low'].rolling(window=10).min()))-1)*100)[-1]
+        avg_dollar_volume = df['Adj Close'].rolling(window=20).mean()[-1] * df['Volume'].rolling(window=20).mean()[-1]
+        macd, macdsignal, macdhist = talib.MACD(df["Adj Close"], fastperiod=12, slowperiod=26, signalperiod=9)
+        
+        df_50 = df.tail(50)
+        up_vol = df_50.loc[df['% Change'] > 0, 'Volume'].sum()
+        down_vol = df_50.loc[df['% Change'] < 0, 'Volume'].sum()
+        up_down_vol = up_vol/down_vol
+        
+        slowk_104, slowd_104 = talib.STOCH(df["High"], df['Low'], df['Adj Close'], fastk_period=10, slowk_period=4, slowk_matype=0, slowd_period=4, slowd_matype=0)
+        slowk_5221, slowd_5221 = talib.STOCH(df["High"], df['Low'], df['Adj Close'], fastk_period=5, slowk_period=2, slowk_matype=0, slowd_period=2, slowd_matype=0)
+        
+        try:
+            moving_average_200_20 = df["SMA_200"][-20]
+        except Exception:
+            moving_average_200_20 = 0
+    
+        # Condition 1: Current Price > 150 SMA and > 200 SMA
+        condition_1 = price > moving_average_150 > moving_average_200
+        
+        # Condition 2: 150 SMA and > 200 SMA
+        condition_2 = moving_average_150 > moving_average_200
+    
+        # Condition 3: 200 SMA trending up for at least 1 month
+        condition_3 = moving_average_200 > moving_average_200_20
+        
+        # Condition 4: 50 SMA> 150 SMA and 50 SMA> 200 SMA
+        condition_4 = moving_average_50 > moving_average_150 > moving_average_200
+           
+        # Condition 5: Current Price > 50 SMA
+        condition_5 = price > moving_average_50
+           
+        # Condition 6: Current Price is at least 30% above 52 week low
+        condition_6 = price >= (1.3*low_of_52week)
+           
+        # Condition 7: Current Price is within 25% of 52 week high
+        condition_7 = price >= (.75*high_of_52week)
+        
+        # Condition 8: Current Price > 10
+        condition_8 = price >= 10
+        
+        # Condition 9: DCR is greater than 40
+        condition_9 = dcr > 40
+        
+        # Condition 10: WCR is greater than 50
+        condition_10 = wcr > 50
+        
+        # Condition 11: Volatility less than 80
+        condition_11 = volatility < 80
+        
+        # Condition 12: Average daily dollar volume
+        condition_12 = avg_dollar_volume > 30000000
+        
+        # Condition 13: Up/Down Volume > 1
+        condition_13 = up_down_vol > 1
+    
+        # Condition 14: Stochastic 10.4 < 80
+        condition_14 = slowk_104[-1] < 80
+        
+        # Condition 15: Slingshot
+        condition_15 = price > df['EMA_4_H'][-1] and df['Adj Close'][-2] < df['EMA_4_H'][-2] and df['Adj Close'][-3] < df['EMA_4_H'][-3] and df['Adj Close'][-4] < df['EMA_4_H'][-4]
+    
+        # Condition 16: 50SMA bounce
+        condition_16 = df["Low"][-2] < df["SMA_50"][-2] and df["High"][-2] > df["SMA_50"][-2] and df["Adj Close"][-1] > df["SMA_50"][-1]
+    
+        # Condition 17: 15.2BBANDS bounce
+        condition_17 = df["Low"][-2] < lower[-2] and df["High"][-2] > lower[-2] and df["Adj Close"][-1] > lower[-1]
+    
+        # Condition 18: Power of three
+        condition_18 = price > 0.98*df['EMA_21'][-1] and price < 1.02*df['EMA_21'][-1] and price > 0.98*df['SMA_10'][-1] and price <1.02*df['SMA_10'][-1] and price > 0.98*df['SMA_50'][-1] and price < 1.02*df['SMA_50'][-1]
+    
+        # Condition 19: 3 Weeks tight
+        logic = {'Open'  : 'first',
+             'High'  : 'max',
+             'Low'   : 'min',
+             'Adj Close' : 'last',
+             'Volume': 'sum'}
+        offset = dt.timedelta(days = 6)
+        df_week = df.resample('W', loffset=offset).apply(logic)
+        condition_19 = df_week['Adj Close'][-2]/df_week['Adj Close'][-3] < 1.015 and df_week['Adj Close'][-2]/df_week['Adj Close'][-3] >.985 and df_week['Adj Close'][-1]/df_week['Adj Close'][-2] < 1.015 and df_week['Adj Close'][-1]/df_week['Adj Close'][-2] >.985 and df_week['Adj Close'][-1]/df_week['Adj Close'][-3] < 1.015 and df_week['Adj Close'][-1]/df_week['Adj Close'][-3] >.985
+    
+        # Condition 20: PGO
+        condition_20 = (price > df["SMA_30"][-1]) and (slowk_104[-2] < slowd_104[-2]) and (slowk_104[-2] < 60) and (slowk_104[-1] > slowd_104[-2]) and (price > df["Adj Close"][-2]) and (price > df["Adj Close"][-3]) and (price > df["Adj Close"][-4]) and (rel_volume > 0.9) and (df["EMA_2"][-1] > df["EMA_8"][-1]) and ((df["EMA_3"][-1] / df["EMA_5"][-1]) < 1.5) and ((df["EMA_4"][-1] / df["EMA_8"][-1]) > 0.7) and ((df["EMA_5"][-1] / df["EMA_30"][-1]) > .95) and (macdhist[-1]>macdhist[-2])
+    
+        # Condition 21: Green Dot
+        condition_21 = (price > df["SMA_30"][-1]) and (slowk_104[-2] < slowd_104[-2]) and (slowk_104[-2] < 60) and (slowk_104[-1] > slowd_104[-2])
+        
+        # Condition 22: Teal Dot
+        condition_22 = (price > df["Open"][-1]) and (dcr > 40) and (slowk_5221[-2] < 60) and (slowk_5221[-2] < slowd_5221[-2]) and (slowk_5221[-1] > slowd_5221[-1])
+        
+        # Condition 23: 3BBU
+        condition_23 = price > df["High"][-2] and price > df["High"][-3] and price > df["High"][-4] and df["High"][-2] < df["High"][-4]
+        
+        # Condition 24: 21EMA bounce
+        condition_24 = df["Low"][-2] < df["EMA_21"][-2] and df["High"][-2] > df["EMA_21"][-2] and df["Adj Close"][-1] > df["EMA_21"][-1]
+    
+        # Condition 25: Upside Reversal
+        condition_25 = dcr > 60 and ((price-df["Low"][-1])/(df["High"][-1]-df["Low"][-1])) > 0.6 and (df["Low"][-1] < df["Low"][-2]) and (slowk_5221[-2] < 85)
+    
+        # Condition 26: Oops Reversal
+        condition_26 =  df["Open"][-1] < df["Low"][-2] and price > df["Low"][-2]
+    
+        # Condition 27: EPS Growth Q/Q
+        condition_27 = eps_q > 0
+    
+        # Condition 28: Sales Growth Q/Q
+        condition_28 = sales_q > 0
+        
+        # Condition 29: Return on Equity
+        condition_29 = roe > 0
+        
+        # Condition 30: Gross Margin
+        condition_30 = gross_margin > 0
+    
+        # Condition 31: EPS Growth Next Year
+        condition_31 = eps_next_year > 0
+    
+        # Condition 32: EPS Growth This Year
+        condition_32 = eps_this_year > 0
+    
+        # Condition 33: Relative Volume > 1
+        condition_33 = rel_volume > 1
+    
+        message = '\nReqs Passed:'
+        
+        if (condition_8):
+            buy_rating += 1
+            message += "\nPrice > 10"
+            
+        if (condition_9):
+            buy_rating += 2
+            message += "\nDCR > 40"
+            
+        if (condition_10):
+            buy_rating += 2
+            message += "\nWCR > 50"
+            
+        if (condition_11):
+            buy_rating += 2
+            message += "\nVolatility < 80"
+            
+        if (condition_14):
+            buy_rating += 2
+            message += "\nStochastic 10.4 < 80"
+            
+        if (condition_29):
+            buy_rating += 3
+            message += "\nReturn on Equity"
+            
+        if (condition_30):
+            buy_rating += 3
+            message += "\nGross Margin"
+    
+        if (condition_12):
+            buy_rating += 4
+            message += "\nAverage Daily Dollar Volume > 30M"
+            
+        if (condition_32):
+            buy_rating += 4
+            message += "\nEPS Growth This Year"
+            
+        if (condition_33):
+            buy_rating += 4
+            message += "\nRelative Volume > 1"
+        
+        if (condition_13):
+            buy_rating += 5
+            message += "\nUp/Down Vol > 1"
+    
+        if (condition_31):
+            buy_rating += 5
+            message += "\nEPS Growth Next Year"
+    
+        if (condition_27):
+            buy_rating += 6
+            message += "\nEPS Growth Q/Q"
+            
+        if (condition_28):
+            buy_rating += 6
+            message += "\nSales Growth Q/Q"
+            
+        if (condition_1 and condition_2 and condition_3 and condition_4 and condition_5 and condition_6 and condition_7):
+            buy_rating += 10
+            message += "\nMinervini Trend Template"
+            
+        if (condition_16):
+            buy_rating += 5
+            message += "\n50SMA bounce"
+    
+        if (condition_19):
+            buy_rating += 5
+            message += "\n3 Weeks tight"
+    
+        if (condition_15):
+            buy_rating += 4
+            message += "\nSlingshot"
+    
+        if (condition_17):
+            buy_rating += 4
+            message += "\n15.2BBANDS bounce"
+    
+        if (condition_18):
+            buy_rating += 4
+            message += "\nPower of three"
+            
+        if (condition_20):
+            buy_rating += 4
+            message += "\nPGO"
+            
+        if (condition_21):
+            buy_rating += 4
+            message += "\nGreen Dot"
+            
+        if (condition_22):
+            buy_rating += 3
+            message += "\nTeal Dot"
+            
+        if (condition_23):
+            buy_rating += 3
+            message += "\n3BBU"
+            
+        if (condition_24):
+            buy_rating += 2
+            message += "\n21EMA Bounce"
+            
+        if (condition_25):
+            buy_rating += 1
+            message += "\nUpside Reversal"
+            
+        if (condition_26):
+            buy_rating += 1
+            message += "\nOops Reversal"
+        
+        return buy_rating, message
+        
+    except:
+        buy_rating = 0
+        message = 'None'
+        return buy_rating, message
 
 def recently_priced():
     url = ("https://www.marketwatch.com/tools/ipo-calendar")
@@ -180,19 +499,6 @@ def screener():
             price = si.get_live_price('{}'.format(message_body))
             price = round(price, 2)
 
-            AvgGain= 15
-            AvgLoss= 5
-
-            maxStopBuy=round(price*((100-AvgLoss)/100), 2)
-            Target1RBuy=round(price*((100+AvgGain)/100),2)
-            Target2RBuy=round(price*(((100+(2*AvgGain))/100)),2)
-            Target3RBuy=round(price*(((100+(3*AvgGain))/100)),2)
-
-            maxStopShort=round(price*((100+AvgLoss)/100), 2)
-            Target1RShort=round(price*((100-AvgGain)/100),2)
-            Target2RShort=round(price*(((100-(2*AvgGain))/100)),2)
-            Target3RShort=round(price*(((100-(3*AvgGain))/100)),2)
-
             finwiz_url = 'https://finviz.com/quote.ashx?t='
             news_tables = {}
             
@@ -274,12 +580,8 @@ def screener():
                             lastGLV=curentGLV
                             counter=0
             
-            sma = 50
-            limit = 10
-
             df = pdr.get_data_yahoo(stock, start_date, end_date).dropna()
             sma = 50
-            limit = 10
 
             df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
             df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
@@ -311,16 +613,11 @@ def screener():
             message = "\n"
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
-
-            message=message + "------------------------\n"
-            message=message + "Recent News:\n"
-
-            for new, time, date in zip(stock_headlines[:4], times[:4], dates[:4]):
-                message=message + f"{date} {time} : {new}\n"
-                
-            message=message + "------------------------\n"
             
-            
+            rating, buy_message = buy_rating()
+            message=message + "------------------------\n"
+            message=message + f"Buy Rating for {ticker} is {rating}"
+            message=message + buy_message
 
         elif message_body.lower() == 'functions':
             message = """

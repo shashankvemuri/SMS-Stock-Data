@@ -17,6 +17,7 @@ beautifulsoup4 = "*"
 nltk = "*"
 datetime = "*"
 yfinance = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
