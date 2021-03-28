@@ -317,6 +317,10 @@ def screener():
 
             for new, time, date in zip(stock_headlines[:4], times[:4], dates[:4]):
                 message=message + f"{date} {time} : {new}\n"
+                
+            message=message + "------------------------\n"
+            
+            
 
         elif message_body.lower() == 'functions':
             message = """
