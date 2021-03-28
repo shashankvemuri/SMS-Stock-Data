@@ -94,7 +94,7 @@ def news():
     news = news.drop(columns = ['0'])
     return news.head(17)
 
-def quality():
+def universe():
     # Set up scraper
     url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o25,fa_epsyoy_o25,fa_epsyoy1_o25,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_price_o10&ft=4&o=-high52w&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
