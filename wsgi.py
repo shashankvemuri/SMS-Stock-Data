@@ -89,8 +89,8 @@ def buy_rating(ticker):
     
         upper, middle, lower = talib.BBANDS(df["Adj Close"], 15, 2, 2)
     
-        dcr = 100*(df["Adj Close"][-1] - df["Low"][-1])/(df["High"][-1] - df["Low"][-1])
-        wcr = (100*(df["Adj Close"][-1] - df['Low'].rolling(window=5).min())/(df['High'].rolling(window=5).max() - df['Low'].rolling(window=5).min()))[-1]
+        dcr = 100*(price - df["Low"][-1])/(df["High"][-1] - df["Low"][-1])
+        wcr = (100*(price - df['Low'].rolling(window=5).min())/(df['High'].rolling(window=5).max() - df['Low'].rolling(window=5).min()))[-1]
         volatility = ((((df['High'].rolling(window=10).max())/(df['Low'].rolling(window=10).min()))-1)*100)[-1]
         avg_dollar_volume = df['Adj Close'].rolling(window=20).mean()[-1] * df['Volume'].rolling(window=20).mean()[-1]
         macd, macdsignal, macdhist = talib.MACD(df["Adj Close"], fastperiod=12, slowperiod=26, signalperiod=9)
@@ -154,10 +154,10 @@ def buy_rating(ticker):
         condition_15 = price > df['EMA_4_H'][-1] and df['Adj Close'][-2] < df['EMA_4_H'][-2] and df['Adj Close'][-3] < df['EMA_4_H'][-3] and df['Adj Close'][-4] < df['EMA_4_H'][-4]
     
         # Condition 16: 50SMA bounce
-        condition_16 = df["Low"][-2] < df["SMA_50"][-2] and df["High"][-2] > df["SMA_50"][-2] and df["Adj Close"][-1] > df["SMA_50"][-1]
+        condition_16 = df["Low"][-2] < df["SMA_50"][-2] and df["High"][-2] > df["SMA_50"][-2] and price > df["SMA_50"][-1]
     
         # Condition 17: 15.2BBANDS bounce
-        condition_17 = df["Low"][-2] < lower[-2] and df["High"][-2] > lower[-2] and df["Adj Close"][-1] > lower[-1]
+        condition_17 = df["Low"][-2] < lower[-2] and df["High"][-2] > lower[-2] and price > lower[-1]
     
         # Condition 18: Power of three
         condition_18 = price > 0.98*df['EMA_21'][-1] and price < 1.02*df['EMA_21'][-1] and price > 0.98*df['SMA_10'][-1] and price <1.02*df['SMA_10'][-1] and price > 0.98*df['SMA_50'][-1] and price < 1.02*df['SMA_50'][-1]
@@ -185,7 +185,7 @@ def buy_rating(ticker):
         condition_23 = price > df["High"][-2] and price > df["High"][-3] and price > df["High"][-4] and df["High"][-2] < df["High"][-4]
         
         # Condition 24: 21EMA bounce
-        condition_24 = df["Low"][-2] < df["EMA_21"][-2] and df["High"][-2] > df["EMA_21"][-2] and df["Adj Close"][-1] > df["EMA_21"][-1]
+        condition_24 = df["Low"][-2] < df["EMA_21"][-2] and df["High"][-2] > df["EMA_21"][-2] and price > df["EMA_21"][-1]
     
         # Condition 25: Upside Reversal
         condition_25 = dcr > 60 and ((price-df["Low"][-1])/(df["High"][-1]-df["Low"][-1])) > 0.6 and (df["Low"][-1] < df["Low"][-2]) and (slowk_5221[-2] < 85)
