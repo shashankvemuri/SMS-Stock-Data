@@ -615,13 +615,13 @@ def screener():
                 message=message + f"{attr} : {val}\n"
             
             rating, buy_message = buy_rating(message_body)
-            rate = round(100 * (rating / 70))
+            rate = round(100 * (rating / 80))
             message=message + "------------------------\n"
             message=message + f"Buy Rating for {ticker} is {rate}"
             
-            if rate >= 90:
+            if rate >= 86:
                 action = "Strong Buy"
-            elif rate >= 85:
+            elif rate >= 75:
                 action = "Buy"
             else:
                 action = "N/A"
