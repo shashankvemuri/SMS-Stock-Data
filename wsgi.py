@@ -211,8 +211,8 @@ def buy_rating(ticker):
         # Condition 32: EPS Growth This Year
         condition_32 = eps_this_year > 0
     
-        # Condition 33: Relative Volume > 1
-        condition_33 = rel_volume > 1
+        # Condition 33: Relative Volume > 1 & Change from Open > 0
+        condition_33 = rel_volume > 1 and price > df["Open"][-1]
     
         message = '\nReqs Passed:'
         
@@ -236,6 +236,14 @@ def buy_rating(ticker):
             buy_rating += 2
             message += "\nStochastic 10.4 < 80"
             
+        if (condition_13):
+            buy_rating += 5
+            message += "\nUp/Down Vol > 1"
+            
+        if (condition_12):
+            buy_rating += 4
+            message += "\nAverage Daily Dollar Volume > 30M"
+            
         if (condition_29):
             buy_rating += 3
             message += "\nReturn on Equity"
@@ -243,27 +251,15 @@ def buy_rating(ticker):
         if (condition_30):
             buy_rating += 3
             message += "\nGross Margin"
-    
-        if (condition_12):
-            buy_rating += 4
-            message += "\nAverage Daily Dollar Volume > 30M"
             
         if (condition_32):
             buy_rating += 4
             message += "\nEPS Growth This Year"
-            
-        if (condition_33):
-            buy_rating += 4
-            message += "\nRelative Volume > 1"
-        
-        if (condition_13):
-            buy_rating += 5
-            message += "\nUp/Down Vol > 1"
-    
+
         if (condition_31):
             buy_rating += 5
             message += "\nEPS Growth Next Year"
-    
+
         if (condition_27):
             buy_rating += 6
             message += "\nEPS Growth Q/Q"
@@ -276,25 +272,29 @@ def buy_rating(ticker):
             buy_rating += 10
             message += "\nMinervini Trend Template"
             
+        if (condition_33):
+            buy_rating += 4
+            message += "\nRelative Volume > 1 & Change From Open > 0"
+            
         if (condition_16):
             buy_rating += 5
-            message += "\n50SMA bounce"
+            message += "\n50SMA Bounce"
     
         if (condition_19):
             buy_rating += 5
-            message += "\n3 Weeks tight"
-    
+            message += "\n3 Weeks Tight"
+
         if (condition_15):
             buy_rating += 4
             message += "\nSlingshot"
-    
+
         if (condition_17):
             buy_rating += 4
-            message += "\n15.2BBANDS bounce"
+            message += "\n15.2BBANDS Bounce"
     
         if (condition_18):
             buy_rating += 4
-            message += "\nPower of three"
+            message += "\nPower of Three"
             
         if (condition_20):
             buy_rating += 4
