@@ -331,6 +331,164 @@ def buy_rating(ticker):
         message = 'None'
         return buy_rating, message
 
+def get_sell_rating(ticker):
+    try:
+        sell_rating = 0
+        start = dt.date.today() - dt.timedelta(days = 365)
+        end = dt.date.today()
+        
+        df = pdr.get_data_yahoo(ticker, start, end)
+        price = df["Adj Close"][-1]
+        df['% Change'] = df['Adj Close'].pct_change()
+        
+        sma = [10, 30, 50, 150, 200]
+        for x in sma:
+            df["SMA_"+str(x)] = round(df['Adj Close'].rolling(window=x).mean(), 2)
+            
+        ema = [2, 3, 4, 5, 8, 21, 30, 65]
+        for x in ema:
+            df["EMA_"+str(x)] = talib.EMA(df['Adj Close'], timeperiod=x)
+        
+        # Storing required values
+        moving_average_50 = df["SMA_50"][-1]
+        moving_average_150 = df["SMA_150"][-1]
+        moving_average_200 = df["SMA_200"][-1]
+        low_of_52week = round(min(df["Low"][-260:]), 2)
+        high_of_52week = round(max(df["High"][-260:]), 2)
+        
+        mcr = (100*(price - df['Low'].rolling(window=21).min())/(df['High'].rolling(window=21).max() - df['Low'].rolling(window=21).min()))[-1]
+        dcr = (100*(price - df['Low'].rolling(window=1).min())/(df['High'].rolling(window=1).max() - df['Low'].rolling(window=1).min()))[-1]
+        
+        volatility = ((((df['High'].rolling(window=10).max())/(df['Low'].rolling(window=10).min()))-1)*100)[-1]
+
+        df_50 = df.tail(50)
+        up_vol = df_50.loc[df['% Change'] > 0, 'Volume'].sum()
+        down_vol = df_50.loc[df['% Change'] < 0, 'Volume'].sum()
+        up_down_vol = up_vol/down_vol
+        
+        slowk_104, slowd_104 = talib.STOCH(df["High"], df['Low'], df['Adj Close'], fastk_period=10, slowk_period=4, slowk_matype=0, slowd_period=4, slowd_matype=0)
+        
+        finviz_data = get_finviz_data(ticker)
+        rel_volume = finviz_data['Rel Volume']
+        
+        try:
+            moving_average_200_20 = df["SMA_200"][-20]
+        except Exception:
+            moving_average_200_20 = 0
+    
+        # Condition 1: Current Price > 150 SMA and > 200 SMA
+        condition_1 = price > moving_average_150 > moving_average_200
+        
+        # Condition 2: 150 SMA and > 200 SMA
+        condition_2 = moving_average_150 > moving_average_200
+    
+        # Condition 3: 200 SMA trending up for at least 1 month
+        condition_3 = moving_average_200 > moving_average_200_20
+        
+        # Condition 4: 50 SMA> 150 SMA and 50 SMA> 200 SMA
+        condition_4 = moving_average_50 > moving_average_150 > moving_average_200
+           
+        # Condition 5: Current Price > 50 SMA
+        condition_5 = price > moving_average_50
+           
+        # Condition 6: Current Price is at least 30% above 52 week low
+        condition_6 = price >= (1.3*low_of_52week)
+           
+        # Condition 7: Current Price is within 25% of 52 week high
+        condition_7 = price >= (.75*high_of_52week)
+
+        # Condition 8: Heavy Volume On Selling
+        condition_8 = rel_volume > 1.3 and price < df["Open"][-1]
+
+        # Condition 9: MCR is less than 40
+        condition_9 = mcr < 40
+        
+        # Condition 10: Volatility greater than 80
+        condition_10 = volatility > 80
+
+        # Condition 11: Up/Down Volume < 1
+        condition_11 = up_down_vol < 1
+    
+        # Condition 12: Stochastic 10.4 > 80
+        condition_12 = slowk_104[-1] > 80
+        
+        # Condition 13: Price < 21EMA for 2 closes
+        condition_15 = price < df["EMA_21"][-1] and df["Adj Close"][-2] < df["EMA_21"][-2]
+
+        # Condition 14: Price < 65EMA for 2 closes
+        condition_14 = price < df["EMA_65"][-1] and df["Adj Close"][-2] < df["EMA_65"][-2]
+
+        # Condition 15: Price < 50SMA for 2 closes
+        condition_13 = price < df["SMA_50"][-1] and df["Adj Close"][-2] < df["SMA_50"][-2]
+
+        # Condition 16: Price < 200SMA for 2 closes
+        condition_16 = price < df["SMA_200"][-1] and df["Adj Close"][-2] < df["SMA_200"][-2]
+                                                                    
+        # Condition 17: 3BBD
+        condition_17 = price < df["Low"][-2] and price < df["Low"][-3] and price < df["Low"][-4]
+        
+        # Condition 18: Downside Reversal
+        condition_18 = df["High"][-1]<df["High"][-2] and df["Adj Close"][-1]<df["Adj Close"][-2] and dcr<40
+
+        message = '\nSell Reqs Passed:'
+            
+        if not(condition_1 and condition_2 and condition_3 and condition_4 and condition_5 and condition_6 and condition_7):
+            sell_rating += 15
+            message += "\nNo Minervini Trend Template"
+        
+        if (condition_8):
+            sell_rating += 20
+            message += "\nHeavy Volume On Selling"
+            
+        if (condition_9):
+            sell_rating += 5
+            message += "\nMCR < 40"
+            
+        if (condition_10):
+            sell_rating += 10
+            message += "\nVolatility > 80"
+            
+        if (condition_11):
+            sell_rating += 18
+            message += "\nUp/Down Vol < 1"
+
+        if (condition_12):
+            sell_rating += 5
+            message += "\nStochastic 10.4 > 80"
+            
+        if (condition_13):
+            sell_rating += 7
+            message += "\nPrice < 21EMA (2x)"
+            
+        if (condition_14):
+            sell_rating += 12
+            message += "\nPrice < 65EMA (2x)"
+        
+        if (condition_15):
+            sell_rating += 12
+            message += "\nPrice < 50SMA (2x)"
+            
+        if (condition_16):
+            sell_rating += 20
+            message += "\nPrice < 200SMA (2x)"
+        
+        if (condition_17):
+            sell_rating += 7
+            message += "\n3BBD"
+            
+        if (condition_18):
+            sell_rating += 7
+            message += "\nDownside Reversal"
+            
+        rating = round(100 * (sell_rating / 80))
+        
+        return rating, message
+        
+    except:
+        buy_rating = 0
+        message = 'None'
+        return buy_rating, message
+
 def recently_priced():
     url = ("https://www.marketwatch.com/tools/ipo-calendar")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -626,8 +784,25 @@ def screener():
             else:
                 action = "N/A"
             
-            message=message + ('\nAction: ' + action)
+            message=message + ('\nBuy Action: ' + action)
             message=message + buy_message
+            
+            
+            s_rating, sell_message = get_sell_rating(message_body)
+            message=message + "------------------------\n"
+            message=message + f"Sell Rating for {ticker} is {s_rating}"
+            
+            if rating >= 100:
+                action = "STRONG Sell"
+            elif rating >= 80 and rating < 100:
+                action = "Strong Sell"
+            elif rating >= 68 and rating < 80:
+                action = "Sell"
+            else:
+                action = "N/A"
+            
+            message=message + ('\nSell Action: ' + action)
+            message=message + sell_message
 
         elif message_body.lower() == 'functions':
             message = """
