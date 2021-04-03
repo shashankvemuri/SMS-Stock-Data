@@ -789,7 +789,7 @@ def screener():
             
             
             s_rating, sell_message = get_sell_rating(message_body)
-            message=message + "------------------------\n"
+            message=message + "\n------------------------\n"
             message=message + f"Sell Rating for {ticker} is {s_rating}"
             
             if rating >= 100:
