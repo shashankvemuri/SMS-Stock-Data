@@ -636,6 +636,32 @@ def squeeze():
     
     return stocks
 
+def leaps():
+    # Set up scraper
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o20,fa_epsyoy_o20,fa_epsyoy1_o25,fa_grossmargin_pos,fa_roe_o15,fa_salesqoq_o25,sh_avgvol_o200,sh_instown_o30,sh_price_o5,ta_perf_52wup&ft=4&o=high52w&ar=180")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+    
+    stocks = pd.read_html(str(html))[-2]
+    stocks.columns = stocks.iloc[0]
+    stocks = stocks[1:]
+    
+    return stocks
+
+def new_highs():
+    # Set up scraper
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_pos,fa_epsyoy_pos,fa_epsyoy1_pos,fa_roe_pos,fa_salesqoq_pos,sh_avgvol_o200,sh_price_o10,ta_change_u,ta_changeopen_u,ta_highlow20d_nh,ta_highlow50d_nh,ta_highlow52w_nh,ta_perf_dup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-relativevolume&ar=180")
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    html = BeautifulSoup(webpage, "html.parser")
+    
+    stocks = pd.read_html(str(html))[-2]
+    stocks.columns = stocks.iloc[0]
+    stocks = stocks[1:]
+    
+    return stocks
+
 def get_top_stocks():
     ups = si.get_day_gainers()
     return ups.head(15)
@@ -917,20 +943,32 @@ def screener():
             
             message = "Stocks to Buy (Long Term):\n{0}".format( ', '.join(map(str, tickers)))
             
+        elif message_body.lower() == 'new highs':
+            df = new_highs()
+            tickers = df['Ticker'].tolist()
+            
+            message = "Stocks Making New Highs:\n{0}".format( ', '.join(map(str, tickers)))
+            
+        elif message_body.lower() == 'leaps':
+            df = leaps()
+            tickers = df['Ticker'].tolist()
+            
+            message = "LEAPS:\n{0}".format( ', '.join(map(str, tickers)))
+            
         elif all(x in message_body.lower() for x in ['rs']) or all(x in message_body.lower() for x in ['strength']):
-            df = long_buys()
+            df = strength()
             tickers = df['Ticker'].tolist()
             
             message = "Stocks Showing RS:\n{0}".format( ', '.join(map(str, tickers)))
             
         elif all(x in message_body.lower() for x in ['alpha']):
-            df = long_buys()
+            df = alpha()
             tickers = df['Ticker'].tolist()
             
             message = "Alpha Setup:\n{0}".format( ', '.join(map(str, tickers)))
             
         elif all(x in message_body.lower() for x in ['squeeze']) or all(x in message_body.lower() for x in ['squeezes']):
-            df = long_buys()
+            df = squeeze()
             tickers = df['Ticker'].tolist()
             
             message = "Short Squeeze Setup:\n{0}".format( ', '.join(map(str, tickers)))
