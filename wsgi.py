@@ -573,7 +573,7 @@ def news():
 
 def universe():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o25,fa_epsyoy_o25,fa_epsyoy1_o25,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_price_o10&ft=4&o=-high52w&ar=180")
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o20,fa_epsyoy_o20,fa_epsyoy1_pos,fa_grossmargin_pos,fa_roe_pos,fa_salesqoq_o20,sh_avgvol_o200,sh_price_o10,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-high52w&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
@@ -599,7 +599,7 @@ def long_buys():
 
 def strength():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_smallover,fa_epsqoq_o20,fa_epsyoy_o20,fa_epsyoy1_pos,fa_grossmargin_pos,fa_roe_pos,fa_salesqoq_o20,sh_avgvol_o200,sh_price_o10,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-high52w&ar=180")
+    url = ("https://finviz.com/screener.ashx?v=151&f=fa_epsqoq_o25,fa_epsyoy_o25,fa_epsyoy1_o25,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_float_u50,ta_highlow52w_b0to10h&ft=4&o=-high52w&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
