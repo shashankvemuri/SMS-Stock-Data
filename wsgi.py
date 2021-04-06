@@ -844,6 +844,8 @@ def screener():
             \n Enter "strength" to get stocks showing RS
             \n Enter "alpha" to get potential setups
             \n Enter "squeeze" to get potential short squeezes
+            \n Enter "new highs" to get stocks making new highs
+            \n Enter "leaps" to get potential leap call ideas
             \n Enter "future ipos" to get future ipos
             \n Enter "this week ipos" to get the ipos for this week
             \n Enter "next week ipos" to get the ipos for next week
