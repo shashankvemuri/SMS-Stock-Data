@@ -586,7 +586,7 @@ def universe():
 
 def long_buys():
     # Set up scraper
-    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsqoq_o25,fa_epsyoy_o20,fa_epsyoy1_o25,fa_grossmargin_pos,fa_roe_o15,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_price_o10,ta_perf_52wup,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-relativevolume&ar=180")
+    url = ("https://finviz.com/screener.ashx?v=151&f=cap_midover,fa_epsqoq_o25,fa_epsyoy_o25,fa_epsyoy1_o25,fa_grossmargin_o20,fa_roe_o20,fa_salesqoq_o25,ind_stocksonly,sh_avgvol_o200,sh_price_o10,ta_sma20_pa,ta_sma200_pa,ta_sma50_pa&ft=4&o=-relativevolume&ar=180")
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     html = BeautifulSoup(webpage, "html.parser")
