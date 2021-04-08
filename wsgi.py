@@ -348,6 +348,8 @@ def get_sell_rating(ticker):
         ema = [2, 3, 4, 5, 8, 21, 30, 65]
         for x in ema:
             df["EMA_"+str(x)] = talib.EMA(df['Adj Close'], timeperiod=x)
+            
+        df["EMA_4_L"] = talib.EMA(df['Low'], timeperiod=4)
         
         # Storing required values
         moving_average_50 = df["SMA_50"][-1]
@@ -430,22 +432,25 @@ def get_sell_rating(ticker):
         # Condition 18: Downside Reversal
         condition_18 = df["High"][-1]<df["High"][-2] and df["Adj Close"][-1]<df["Adj Close"][-2] and dcr<40
 
+        # Condition 19: Reverse Slingshot
+        condition_19 = price < df['EMA_4_L'][-1] and df['Adj Close'][-2] > df['EMA_4_L'][-2] and df['Adj Close'][-3] > df['EMA_4_L'][-3] and df['Adj Close'][-4] > df['EMA_4_L'][-4]
+
         message = '\nSell Reqs Passed:'
             
         if not(condition_1 and condition_2 and condition_3 and condition_4 and condition_5 and condition_6 and condition_7):
-            sell_rating += 15
+            sell_rating += 18
             message += "\nNo Minervini Trend Template"
         
         if (condition_8):
-            sell_rating += 20
+            sell_rating += 18
             message += "\nHeavy Volume On Selling"
             
         if (condition_9):
-            sell_rating += 5
+            sell_rating += 3
             message += "\nMCR < 40"
             
         if (condition_10):
-            sell_rating += 10
+            sell_rating += 5
             message += "\nVolatility > 80"
             
         if (condition_11):
@@ -453,11 +458,11 @@ def get_sell_rating(ticker):
             message += "\nUp/Down Vol < 1"
 
         if (condition_12):
-            sell_rating += 5
+            sell_rating += 3
             message += "\nStochastic 10.4 > 80"
             
         if (condition_13):
-            sell_rating += 7
+            sell_rating += 6
             message += "\nPrice < 21EMA (2x)"
             
         if (condition_14):
@@ -469,25 +474,27 @@ def get_sell_rating(ticker):
             message += "\nPrice < 50SMA (2x)"
             
         if (condition_16):
-            sell_rating += 20
+            sell_rating += 6
             message += "\nPrice < 200SMA (2x)"
         
         if (condition_17):
-            sell_rating += 7
+            sell_rating += 12
             message += "\n3BBD"
             
         if (condition_18):
-            sell_rating += 7
+            sell_rating += 12
             message += "\nDownside Reversal"
             
-        rating = round(100 * (sell_rating / 80))
+        if (condition_19):
+            sell_rating += 12
+            message += "\nReverse Slingshot"
         
-        return rating, message
+        return sell_rating, message
         
     except:
-        buy_rating = 0
+        sell_rating = 0
         message = 'None'
-        return buy_rating, message
+        return sell_rating, message
 
 def recently_priced():
     url = ("https://www.marketwatch.com/tools/ipo-calendar")
