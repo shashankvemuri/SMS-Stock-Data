@@ -213,7 +213,15 @@ def buy_rating(ticker):
     
         # Condition 33: Relative Volume > 1 & Change from Open > 0
         condition_33 = rel_volume > 1 and price > df["Open"][-1]
+        
+        # Condition 34: Tight Action on Low Volume (Low Volatility)
+        df['Diff'] = df['High'] / df['Low']
+        real_volatility = (((((df['High'].rolling(window=10).max())/(df['Low'].rolling(window=10).min())) / df['Diff'].rolling(window=10).mean()) - 1) * 100)[-1]
+        condition_34 = real_volatility < 12 and (df['Volume'].rolling(window=10).mean()[-1] < df['Volume'].rolling(window=50).mean()[-1])
     
+        # Condition 35: Black Dot
+        condition_35 = (slowk_104[-2] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-2] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-3] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-3] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-4] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-4] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2])
+        
         message = '\nReqs Passed:'
         
         if (condition_8):
@@ -229,11 +237,11 @@ def buy_rating(ticker):
             message += "\nWCR > 50"
             
         if (condition_11):
-            buy_rating += 2
+            buy_rating += 4
             message += "\nVolatility < 80"
             
         if (condition_14):
-            buy_rating += 2
+            buy_rating += 4
             message += "\nStochastic 10.4 < 80"
             
         if (condition_13):
@@ -241,7 +249,7 @@ def buy_rating(ticker):
             message += "\nUp/Down Vol > 1"
             
         if (condition_12):
-            buy_rating += 4
+            buy_rating += 5
             message += "\nAverage Daily Dollar Volume > 30M"
             
         if (condition_29):
@@ -273,55 +281,63 @@ def buy_rating(ticker):
             message += "\nMinervini Trend Template"
             
         if (condition_33):
-            buy_rating += 4
+            buy_rating += 5
             message += "\nRelative Volume > 1 & Change From Open > 0"
             
         if (condition_16):
-            buy_rating += 5
+            buy_rating += 6
             message += "\n50SMA Bounce"
     
         if (condition_19):
-            buy_rating += 5
+            buy_rating += 6
             message += "\n3 Weeks Tight"
 
         if (condition_15):
-            buy_rating += 4
+            buy_rating += 5
             message += "\nSlingshot"
 
         if (condition_17):
-            buy_rating += 4
+            buy_rating += 6
             message += "\n15.2BBANDS Bounce"
     
         if (condition_18):
-            buy_rating += 4
+            buy_rating += 6
             message += "\nPower of Three"
             
         if (condition_20):
-            buy_rating += 4
+            buy_rating += 6
             message += "\nPGO"
             
         if (condition_21):
-            buy_rating += 4
+            buy_rating += 5
             message += "\nGreen Dot"
             
+        if (condition_34):
+            buy_rating += 5
+            message += "\nFlat Base"
+            
+        if (condition_35):
+            buy_rating += 5
+            message += "\nBlack Dot"
+            
         if (condition_22):
-            buy_rating += 3
+            buy_rating += 4
             message += "\nTeal Dot"
             
         if (condition_23):
-            buy_rating += 3
+            buy_rating += 4
             message += "\n3BBU"
             
         if (condition_24):
-            buy_rating += 2
+            buy_rating += 4
             message += "\n21EMA Bounce"
             
         if (condition_25):
-            buy_rating += 1
+            buy_rating += 2
             message += "\nUpside Reversal"
             
         if (condition_26):
-            buy_rating += 1
+            buy_rating += 2
             message += "\nOops Reversal"
         
         return buy_rating, message
@@ -729,11 +745,7 @@ def screener():
             dataframe = dataframe.join(scores_df, rsuffix='_right')
 
             dataframe = dataframe.set_index('ticker')
-            
             sentiment = round(dataframe['compound'].mean(), 2)
-            stock_headlines = dataframe['headline'].tolist()
-            times = dataframe['time'].tolist()
-            dates = dataframe['date'].tolist()
 
             num_of_years = 40
             start_date = dt.datetime.now() - dt.timedelta(int(365.25 * num_of_years))
@@ -806,24 +818,26 @@ def screener():
                 message=message + f"{attr} : {val}\n"
             
             rating, buy_message = buy_rating(message_body)
-            rate = round(100 * (rating / 80))
             message=message + "------------------------\n"
-            message=message + f"Buy Rating for {ticker} is {rate}"
             
-            if rate >= 86:
+            if rating > 100:
+                rating = 100
                 action = "Strong Buy"
-            elif rate >= 75:
+            elif rating >= 86:
+                action = "Strong Buy"
+            elif rating >= 75 and buy_rating < 86:
                 action = "Buy"
             else:
                 action = "N/A"
             
+            message=message + f"Buy Rating for {stock} is {rating}"
             message=message + ('\nBuy Action: ' + action)
             message=message + buy_message
             
             
             s_rating, sell_message = get_sell_rating(message_body)
             message=message + "\n------------------------\n"
-            message=message + f"Sell Rating for {ticker} is {s_rating}"
+            message=message + f"Sell Rating for {stock} is {s_rating}"
             
             if rating >= 100:
                 action = "STRONG Sell"
