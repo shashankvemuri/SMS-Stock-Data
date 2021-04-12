@@ -823,9 +823,9 @@ def screener():
             if rating > 100:
                 rating = 100
                 action = "Strong Buy"
-            elif rating >= 86:
+            elif rating >= 85:
                 action = "Strong Buy"
-            elif rating >= 75 and buy_rating < 86:
+            elif rating >= 75 and buy_rating < 85:
                 action = "Buy"
             else:
                 action = "N/A"
