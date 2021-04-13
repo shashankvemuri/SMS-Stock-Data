@@ -508,7 +508,7 @@ def get_sell_rating(ticker):
         return sell_rating, message
         
     except:
-        sell_rating = 0
+        sell_rating = -1
         message = 'None'
         return sell_rating, message
 
