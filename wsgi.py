@@ -349,12 +349,13 @@ def buy_rating(ticker):
 
 def get_sell_rating(ticker):
     try:
-        sell_rating = 0
         start = dt.date.today() - dt.timedelta(days = 365)
         end = dt.date.today()
         
+        sell_rating = 0
+        
         df = pdr.get_data_yahoo(ticker, start, end)
-        price = df["Adj Close"][-1]
+        price = si.get_live_price(ticker)
         df['% Change'] = df['Adj Close'].pct_change()
         
         sma = [10, 30, 50, 150, 200]
@@ -364,7 +365,7 @@ def get_sell_rating(ticker):
         ema = [2, 3, 4, 5, 8, 21, 30, 65]
         for x in ema:
             df["EMA_"+str(x)] = talib.EMA(df['Adj Close'], timeperiod=x)
-            
+        
         df["EMA_4_L"] = talib.EMA(df['Low'], timeperiod=4)
         
         # Storing required values
@@ -385,6 +386,7 @@ def get_sell_rating(ticker):
         up_down_vol = up_vol/down_vol
         
         slowk_104, slowd_104 = talib.STOCH(df["High"], df['Low'], df['Adj Close'], fastk_period=10, slowk_period=4, slowk_matype=0, slowd_period=4, slowd_matype=0)
+        upperband, middleband, lowerband = talib.BBANDS(df["Adj Close"], timeperiod=50, nbdevup=2, nbdevdn=2, matype=0)
         
         finviz_data = get_finviz_data(ticker)
         rel_volume = finviz_data['Rel Volume']
@@ -447,63 +449,77 @@ def get_sell_rating(ticker):
         
         # Condition 18: Downside Reversal
         condition_18 = df["High"][-1]<df["High"][-2] and df["Adj Close"][-1]<df["Adj Close"][-2] and dcr<40
+        
+        # Condition 19: High > 50.2 BBANDS
+        condition_19 = df["High"][-1] > upperband[-1]
 
-        # Condition 19: Reverse Slingshot
-        condition_19 = price < df['EMA_4_L'][-1] and df['Adj Close'][-2] > df['EMA_4_L'][-2] and df['Adj Close'][-3] > df['EMA_4_L'][-3] and df['Adj Close'][-4] > df['EMA_4_L'][-4]
+        # Condition 20: Price > 50.2 BBANDS
+        condition_20 = price > upperband[-1]
+
+        # Condition 21: Low > 50.2 BBANDS
+        condition_21 = df["Low"][-1] > upperband[-1]
 
         message = '\nSell Reqs Passed:'
             
         if not(condition_1 and condition_2 and condition_3 and condition_4 and condition_5 and condition_6 and condition_7):
-            sell_rating += 18
+            sell_rating += 10
             message += "\nNo Minervini Trend Template"
         
         if (condition_8):
-            sell_rating += 18
+            sell_rating += 10
             message += "\nHeavy Volume On Selling"
             
         if (condition_9):
-            sell_rating += 3
+            sell_rating += 2
             message += "\nMCR < 40"
             
         if (condition_10):
-            sell_rating += 5
+            sell_rating += 2
             message += "\nVolatility > 80"
             
         if (condition_11):
-            sell_rating += 18
+            sell_rating += 10
             message += "\nUp/Down Vol < 1"
 
         if (condition_12):
-            sell_rating += 3
+            sell_rating += 5
             message += "\nStochastic 10.4 > 80"
             
         if (condition_13):
-            sell_rating += 6
+            sell_rating += 5
             message += "\nPrice < 21EMA (2x)"
             
         if (condition_14):
-            sell_rating += 12
+            sell_rating += 5
             message += "\nPrice < 65EMA (2x)"
         
         if (condition_15):
-            sell_rating += 12
+            sell_rating += 5
             message += "\nPrice < 50SMA (2x)"
             
         if (condition_16):
-            sell_rating += 6
+            sell_rating += 5
             message += "\nPrice < 200SMA (2x)"
         
         if (condition_17):
-            sell_rating += 12
+            sell_rating += 3
             message += "\n3BBD"
             
         if (condition_18):
-            sell_rating += 12
+            sell_rating += 3
             message += "\nDownside Reversal"
-            
+
         if (condition_19):
-            sell_rating += 12
-            message += "\nReverse Slingshot"
+            sell_rating += 80
+            message += "\nHigh > 50.2 BBANDS"
+
+        if (condition_20):
+            sell_rating += 90
+            message += "\nClose > 50.2 BBANDS"
+
+        if (condition_21):
+            sell_rating += 100
+            message += "\nLow > 50.2 BBANDS"
         
         return sell_rating, message
         
@@ -839,11 +855,10 @@ def screener():
             message=message + "\n------------------------\n"
             message=message + f"Sell Rating for {stock} is {s_rating}"
             
-            if rating >= 100:
-                action = "STRONG Sell"
-            elif rating >= 80 and rating < 100:
+            if s_rating >= 100:
+                s_rating = 100
                 action = "Strong Sell"
-            elif rating >= 68 and rating < 80:
+            elif s_rating >= 80:
                 action = "Sell"
             else:
                 action = "N/A"
