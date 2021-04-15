@@ -450,14 +450,14 @@ def get_sell_rating(ticker):
         # Condition 18: Downside Reversal
         condition_18 = df["High"][-1]<df["High"][-2] and df["Adj Close"][-1]<df["Adj Close"][-2] and dcr<40
         
-        # Condition 19: High > 50.2 BBANDS
-        condition_19 = df["High"][-1] > upperband[-1]
+        # Condition 19: High > 50.2 BBANDS (3x)
+        sell_condition_19 = df["High"][-1] > upperband[-1] and df["High"][-2] > upperband[-2] and df["High"][-3] > upperband[-3] and df["High"][-4] > upperband[-4]
 
-        # Condition 20: Price > 50.2 BBANDS
-        condition_20 = price > upperband[-1]
+        # Condition 20: Price > 50.2 BBANDS (3x)
+        sell_condition_20 = df["Adj Close"][-1] > upperband[-1] and df["Adj Close"][-2] > upperband[-2] and df["Adj Close"][-3] > upperband[-3] and df["Adj Close"][-4] > upperband[-4]
 
-        # Condition 21: Low > 50.2 BBANDS
-        condition_21 = df["Low"][-1] > upperband[-1]
+        # Condition 21: Low > 50.2 BBANDS (3x)
+        sell_condition_21 = (df["Low"][-1] > upperband[-1] and df["Low"][-2] > upperband[-2] and df["Low"][-3] > upperband[-3]) or df["Low"][-1] > 1.05 * upperband[-1]
 
         message = '\nSell Reqs Passed:'
             
