@@ -223,7 +223,7 @@ def buy_rating(ticker):
         # Condition 35: Black Dot
         condition_35 = (slowk_104[-2] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-2] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-3] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-3] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-4] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-4] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2])
         
-        message = '\nReqs Passed:'
+        message = '\nBuy Reqs Passed:'
         
         if (condition_8):
             buy_rating += 1
@@ -887,7 +887,7 @@ def screener():
             message=message + ('\nOverall Buy Action: ' + action)
             message=message + f"\nTechnical Buy Rating for {stock} is {technical_rating}"
             message=message + ('\nTechnical Buy Action: ' + technical_action)
-            message=message + "------------\n"
+            message=message + "\n------------"
             message=message + buy_message
             
             s_rating, sell_message = get_sell_rating(message_body)
