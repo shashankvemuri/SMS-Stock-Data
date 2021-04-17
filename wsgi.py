@@ -887,6 +887,7 @@ def screener():
             message=message + ('\nOverall Buy Action: ' + action)
             message=message + f"\nTechnical Buy Rating for {stock} is {technical_rating}"
             message=message + ('\nTechnical Buy Action: ' + technical_action)
+            message=message + "------------\n"
             message=message + buy_message
             
             s_rating, sell_message = get_sell_rating(message_body)
