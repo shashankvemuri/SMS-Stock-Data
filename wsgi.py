@@ -56,6 +56,7 @@ def buy_rating(ticker):
         
         price = si.get_live_price(ticker)
         buy_rating = 0
+        technical_buy_rating = 0
         
         df = pdr.get_data_yahoo(ticker, start, end)
         
@@ -226,30 +227,37 @@ def buy_rating(ticker):
         
         if (condition_8):
             buy_rating += 1
+            technical_buy_rating += 1
             message += "\nPrice > 10"
             
         if (condition_9):
             buy_rating += 2
+            technical_buy_rating += 2
             message += "\nDCR > 40"
             
         if (condition_10):
             buy_rating += 2
+            technical_buy_rating += 2
             message += "\nWCR > 50"
             
         if (condition_11):
             buy_rating += 4
+            technical_buy_rating += 4
             message += "\nVolatility < 80"
             
         if (condition_14):
             buy_rating += 4
+            technical_buy_rating += 4
             message += "\nStochastic 10.4 < 80"
             
         if (condition_13):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nUp/Down Vol > 1"
             
         if (condition_12):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nAverage Daily Dollar Volume > 30M"
             
         if (condition_29):
@@ -278,74 +286,91 @@ def buy_rating(ticker):
             
         if (condition_1 and condition_2 and condition_3 and condition_4 and condition_5 and condition_6 and condition_7):
             buy_rating += 10
+            technical_buy_rating += 10
             message += "\nMinervini Trend Template"
             
         if (condition_33):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nRelative Volume > 1 & Change From Open > 0"
             
         if (condition_16):
             buy_rating += 6
+            technical_buy_rating += 6
             message += "\n50SMA Bounce"
     
         if (condition_19):
             buy_rating += 6
+            technical_buy_rating += 6
             message += "\n3 Weeks Tight"
 
         if (condition_15):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nSlingshot"
 
         if (condition_17):
             buy_rating += 6
+            technical_buy_rating += 6
             message += "\n15.2BBANDS Bounce"
     
         if (condition_18):
             buy_rating += 6
+            technical_buy_rating += 6
             message += "\nPower of Three"
             
         if (condition_20):
             buy_rating += 6
+            technical_buy_rating += 6
             message += "\nPGO"
             
         if (condition_21):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nGreen Dot"
             
         if (condition_34):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nFlat Base"
             
         if (condition_35):
             buy_rating += 5
+            technical_buy_rating += 5
             message += "\nBlack Dot"
             
         if (condition_22):
             buy_rating += 4
+            technical_buy_rating += 4
             message += "\nTeal Dot"
             
         if (condition_23):
             buy_rating += 4
+            technical_buy_rating += 4
             message += "\n3BBU"
             
         if (condition_24):
             buy_rating += 4
+            technical_buy_rating += 4
             message += "\n21EMA Bounce"
             
         if (condition_25):
             buy_rating += 2
+            technical_buy_rating += 2
             message += "\nUpside Reversal"
             
         if (condition_26):
             buy_rating += 2
+            technical_buy_rating += 2
             message += "\nOops Reversal"
         
-        return buy_rating, message
+        return buy_rating, technical_buy_rating, message
         
     except:
         buy_rating = 0
+        technical_buy_rating = 0
         message = 'None'
-        return buy_rating, message
+        return buy_rating, technical_buy_rating, message
 
 def get_sell_rating(ticker):
     try:
@@ -514,11 +539,11 @@ def get_sell_rating(ticker):
             message += "\nHigh > 50.2 BBANDS"
 
         if (condition_20):
-            sell_rating += 90
+            sell_rating += 10
             message += "\nClose > 50.2 BBANDS"
 
         if (condition_21):
-            sell_rating += 100
+            sell_rating += 20
             message += "\nLow > 50.2 BBANDS"
         
         return sell_rating, message
@@ -833,7 +858,7 @@ def screener():
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
             
-            rating, buy_message = buy_rating(message_body)
+            rating, technical_rating, buy_message = buy_rating(message_body)
             message=message + "------------------------\n"
             
             if rating > 100:
@@ -846,10 +871,10 @@ def screener():
             else:
                 action = "N/A"
             
-            message=message + f"Buy Rating for {stock} is {rating}"
+            message=message + f"Overall Buy Rating for {stock} is {rating}"
+            message=message + f"Technical Buy Rating for {stock} is {technical_rating}"
             message=message + ('\nBuy Action: ' + action)
             message=message + buy_message
-            
             
             s_rating, sell_message = get_sell_rating(message_body)
             message=message + "\n------------------------\n"
