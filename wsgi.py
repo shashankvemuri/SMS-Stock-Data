@@ -871,6 +871,9 @@ def screener():
             else:
                 action = "N/A"
             
+
+            technical_rating = round(technical_rating/0.69)
+
             message=message + f"Overall Buy Rating for {stock} is {rating}"
             message=message + f"Technical Buy Rating for {stock} is {technical_rating}"
             message=message + ('\nBuy Action: ' + action)
