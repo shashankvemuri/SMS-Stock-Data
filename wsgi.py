@@ -866,17 +866,27 @@ def screener():
                 action = "Strong Buy"
             elif rating >= 85:
                 action = "Strong Buy"
-            elif rating >= 75 and buy_rating < 85:
+            elif rating >= 75 and rating < 85:
                 action = "Buy"
             else:
                 action = "N/A"
             
-
             technical_rating = round(technical_rating/0.69)
 
+            if technical_rating > 100:
+                technical_rating = 100
+                technical_action = "Strong Technicals Buy"
+            elif technical_rating >= 85:
+                technical_action = "Strong Technicals Buy"
+            elif technical_rating >= 75 and technical_rating < 85:
+                technical_action = "Technicals Buy"
+            else:
+                technical_action = "N/A"
+
             message=message + f"Overall Buy Rating for {stock} is {rating}"
+            message=message + ('\nOverall Buy Action: ' + action)
             message=message + f"Technical Buy Rating for {stock} is {technical_rating}"
-            message=message + ('\nBuy Action: ' + action)
+            message=message + ('\nTechnical Buy Action: ' + technical_action)
             message=message + buy_message
             
             s_rating, sell_message = get_sell_rating(message_body)
