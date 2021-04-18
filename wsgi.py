@@ -231,11 +231,6 @@ def buy_rating(ticker):
         # Condition 38: Wick Setup
         condition_38 = (df['Adj Close'][-1] > df['Adj Close'][-2]) and (df['Adj Close'][-1] < df['High'][-2]) and (df['Adj Close'][-2] > df['Adj Close'][-3]) and (df['Adj Close'][-2] > df['Open'][-2])
 
-        # Condition 39: Hourly Slingshot
-        df_hour = pdr.get_data_yahoo(ticker, end-dt.timedelta(days=30), end, interval='1h')
-        df_hour['EMA_4_H'] = talib.EMA(df_hour['High'], timeperiod=4)
-        condition_39 = df_hour['Adj Close'][-1] > df_hour['EMA_4_H'][-1] and df_hour['Adj Close'][-2] < df_hour['EMA_4_H'][-2] and df_hour['Adj Close'][-3] < df_hour['EMA_4_H'][-3] and df_hour['Adj Close'][-4] < df_hour['EMA_4_H'][-4]
-
         '''
         Condition 40: High Tight Flag
         c/o(8)>1.9 (weekly for past 6 bars) and c>avg(c,50) and c/c(1)<1.7 (daily for the past 70 bars) and c/max(h,40)>.7 and
@@ -419,10 +414,6 @@ def buy_rating(ticker):
             technical_buy_rating += 2
             message += "\nWick Setup"
 
-        if (condition_39):
-            buy_rating += 2
-            technical_buy_rating += 2
-            message += "\nHourly Slingshot"
         
         return buy_rating, technical_buy_rating, message
         
