@@ -918,30 +918,30 @@ def screener():
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
             
-            buy_rating, technical_buy_rating, buy_message = buy_rating(message_body)
+            rating, technical_rating, buy_message = buy_rating(message_body)
             message=message + "------------------------\n"
             
-            if buy_rating > 100:
-                buy_rating = 100
+            if rating > 100:
+                rating = 100
                 action = "Strong Buy"
-            elif buy_rating >= 86:
+            elif rating >= 86:
                 action = "Strong Buy"
-            elif buy_rating >= 78 and buy_rating < 86:
+            elif rating >= 78 and rating < 86:
                 action = "Buy"
             else:
                 action = "N/A"
 
-            technical_buy_rating = round(technical_rating/0.69)
-            if technical_buy_rating >= 86:
+            technical_rating = round(technical_rating/0.69)
+            if technical_rating >= 86:
                 technical_action = "Strong Buy"
-            elif technical_buy_rating >= 78 and technical_buy_rating < 86:
+            elif technical_rating >= 78 and technical_rating < 86:
                 technical_action = "Buy"
             else:
                 technical_action = "N/A"
 
-            message=message + f"Overall Buy Rating for {stock} is {buy_rating}"
+            message=message + f"Overall Buy Rating for {stock} is {rating}"
             message=message + ('\nOverall Buy Action: ' + action)
-            message=message + f"\nTechnical Buy Rating for {stock} is {technical_buy_rating}"
+            message=message + f"\nTechnical Buy Rating for {stock} is {technical_rating}"
             message=message + ('\nTechnical Buy Action: ' + technical_action)
             message=message + "\n------------"
             message=message + buy_message
