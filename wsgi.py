@@ -223,7 +223,7 @@ def buy_rating(ticker):
         condition_35 = (slowk_104[-2] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-2] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-3] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-3] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-4] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-4] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2])
 
         # Condition 36: Matt Caruso Kicker
-        condition_36 = (df['Adj Close'][-2] < df['Open'][-2]) and (df['Open'][-1] > df['High'][-2])
+        condition_36 = (df['Adj Close'][-2] < df['Open'][-2]) and (df['Open'][-1] > df['High'][-2]) and (df['Adj Close'][-1] > df['Open'][-1])
 
         # Condition 37: Inside Day and Out
         condition_37 = df['Adj Close'][-1] > df['High'][-2] and df['Low'][-3] < df['Low'][-2] and df['High'][-2] < df['High'][-3] and ((df['High'][-2] - df['Low'][-2]) < ((df['High'][-3] - df['Low'][-3]) / 2))
@@ -367,7 +367,7 @@ def buy_rating(ticker):
         if (condition_34):
             buy_rating += 5
             technical_buy_rating += 5
-            message += "\nFlat Base"
+            message += "\nTight Action on Low Volume"
             
         if (condition_35):
             buy_rating += 5
