@@ -54,12 +54,11 @@ def buy_rating(ticker):
         start = dt.date.today() - dt.timedelta(days = 365)
         end = dt.date.today()
         
-        price = si.get_live_price(ticker)
         buy_rating = 0
         technical_buy_rating = 0
         
         df = pdr.get_data_yahoo(ticker, start, end)
-        
+        price = df['Adj Close'][-1]
         df['% Change'] = df['Adj Close'].pct_change()
         df['EMA_4_H'] = talib.EMA(df['High'], timeperiod=4)
         
@@ -81,7 +80,7 @@ def buy_rating(ticker):
         # retrieving finviz values
         finviz_data = get_finviz_data(ticker)
         sales_q = finviz_data['Sales Q/Q']
-        eps_q = finviz_data['EPS Q/Q']                  
+        eps_q = finviz_data['EPS Q/Q']
         eps_next_year = finviz_data['EPS next Y']
         eps_this_year = finviz_data['EPS this Y']
         gross_margin = finviz_data['Gross Margin']
@@ -222,8 +221,49 @@ def buy_rating(ticker):
     
         # Condition 35: Black Dot
         condition_35 = (slowk_104[-2] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-2] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-3] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-3] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-4] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-4] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2])
+
+        # Condition 36: Matt Caruso Kicker
+        condition_36 = (df['Adj Close'][-2] < df['Open'][-2]) and (df['Open'][-1] > df['High'][-2])
+
+        # Condition 37: Inside Day and Out
+        condition_37 = df['Adj Close'][-1] > df['High'][-2] and df['Low'][-3] < df['Low'][-2] and df['High'][-2] < df['High'][-3] and ((df['High'][-2] - df['Low'][-2]) < ((df['High'][-3] - df['Low'][-3]) / 2))
+
+        # Condition 38: Wick Setup
+        condition_38 = (df['Adj Close'][-1] > df['Adj Close'][-2]) and (df['Adj Close'][-1] < df['High'][-2]) and (df['Adj Close'][-2] > df['Adj Close'][-3]) and (df['Adj Close'][-2] > df['Open'][-2])
+
+        # Condition 39: Hourly Slingshot
+        df_hour = pdr.get_data_yahoo(ticker, end-dt.timedelta(days=30), end, interval='1h')
+        df_hour['EMA_4_H'] = talib.EMA(df_hour['High'], timeperiod=4)
+        condition_39 = df_hour['Adj Close'][-1] > df_hour['EMA_4_H'][-1] and df_hour['Adj Close'][-2] < df_hour['EMA_4_H'][-2] and df_hour['Adj Close'][-3] < df_hour['EMA_4_H'][-3] and df_hour['Adj Close'][-4] < df_hour['EMA_4_H'][-4]
+
+        '''
+        Condition 40: High Tight Flag
+        c/o(8)>1.9 (weekly for past 6 bars) and c>avg(c,50) and c/c(1)<1.7 (daily for the past 70 bars) and c/max(h,40)>.7 and
+        condition_40 = df
+
+        # Condition 41: Volatility Contraction Pattern
+        condition_41 = df
+
+        # Condition 42: Cup with Handle
+        condition_42 = df
+
+        # Condition 43: Cup without Handle
+        condition_43 = df
+
+        # Condition 44: Double Bottom or Multiple Botton
+        condition_44 = df
+
+        # Condition 45: Trendline Support (Strong)
+        condition_45 = df
+
+        # Condition 45: Descending Triangle (Strong)
+        condition_45 = df
+
+        # Condition 45: Inverse Head and Shoulders
+        condition_45 = df
+        '''
         
-        message = '\nBuy Reqs Passed:'
+        message = '\nReqs Passed:'
         
         if (condition_8):
             buy_rating += 1
@@ -354,6 +394,11 @@ def buy_rating(ticker):
             technical_buy_rating += 4
             message += "\n21EMA Bounce"
             
+        if (condition_37):
+            buy_rating += 3
+            technical_buy_rating += 3
+            message += "\nInside Day and Out"
+
         if (condition_25):
             buy_rating += 2
             technical_buy_rating += 2
@@ -363,6 +408,21 @@ def buy_rating(ticker):
             buy_rating += 2
             technical_buy_rating += 2
             message += "\nOops Reversal"
+
+        if (condition_36):
+            buy_rating += 2
+            technical_buy_rating += 2
+            message += "\nMatt Caruso Kicker"
+
+        if (condition_38):
+            buy_rating += 2
+            technical_buy_rating += 2
+            message += "\nWick Setup"
+
+        if (condition_39):
+            buy_rating += 2
+            technical_buy_rating += 2
+            message += "\nHourly Slingshot"
         
         return buy_rating, technical_buy_rating, message
         
@@ -858,34 +918,30 @@ def screener():
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
             
-            rating, technical_rating, buy_message = buy_rating(message_body)
+            buy_rating, technical_buy_rating, buy_message = buy_rating(message_body)
             message=message + "------------------------\n"
             
-            if rating > 100:
-                rating = 100
+            if buy_rating > 100:
+                buy_rating = 100
                 action = "Strong Buy"
-            elif rating >= 85:
+            elif buy_rating >= 86:
                 action = "Strong Buy"
-            elif rating >= 75 and rating < 85:
+            elif buy_rating >= 78 and buy_rating < 86:
                 action = "Buy"
             else:
                 action = "N/A"
-            
-            technical_rating = round(technical_rating/0.69)
 
-            if technical_rating > 100:
-                technical_rating = 100
-                technical_action = "Strong Technicals Buy"
-            elif technical_rating >= 85:
-                technical_action = "Strong Technicals Buy"
-            elif technical_rating >= 75 and technical_rating < 85:
-                technical_action = "Technicals Buy"
+            technical_buy_rating = round(technical_rating/0.69)
+            if technical_buy_rating >= 86:
+                technical_action = "Strong Buy"
+            elif technical_buy_rating >= 78 and technical_buy_rating < 86:
+                technical_action = "Buy"
             else:
                 technical_action = "N/A"
 
-            message=message + f"Overall Buy Rating for {stock} is {rating}"
+            message=message + f"Overall Buy Rating for {stock} is {buy_rating}"
             message=message + ('\nOverall Buy Action: ' + action)
-            message=message + f"\nTechnical Buy Rating for {stock} is {technical_rating}"
+            message=message + f"\nTechnical Buy Rating for {stock} is {technical_buy_rating}"
             message=message + ('\nTechnical Buy Action: ' + technical_action)
             message=message + "\n------------"
             message=message + buy_message
