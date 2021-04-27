@@ -915,17 +915,17 @@ def screener():
             if rating > 100:
                 rating = 100
                 action = "Strong Buy"
-            elif rating >= 86:
+            elif rating >= 80:
                 action = "Strong Buy"
-            elif rating >= 78 and rating < 86:
+            elif rating >= 70 and rating < 80:
                 action = "Buy"
             else:
                 action = "N/A"
 
             technical_rating = round(technical_rating/0.69)
-            if technical_rating >= 86:
+            if technical_rating >= 80:
                 technical_action = "Strong Buy"
-            elif technical_rating >= 78 and technical_rating < 86:
+            elif technical_rating >= 70 and technical_rating < 80:
                 technical_action = "Buy"
             else:
                 technical_action = "N/A"
