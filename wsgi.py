@@ -7,13 +7,11 @@ from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import yfinance as yf
 import datetime as dt
-from pandas_datareader import data as pdr
+from pandas_datareader import DataReader
 
 import talib
 import requests
 from bs4 import BeautifulSoup as bs
-
-yf.pdr_override()
 
 app = Flask(__name__)
 
@@ -57,7 +55,7 @@ def buy_rating(ticker):
         buy_rating = 0
         technical_buy_rating = 0
         
-        df = pdr.get_data_yahoo(ticker, start, end)
+        df = DataReader(ticker, 'yahoo', start, end)
         price = df['Adj Close'][-1]
         df['% Change'] = df['Adj Close'].pct_change()
         df['EMA_4_H'] = talib.EMA(df['High'], timeperiod=4)
@@ -430,7 +428,7 @@ def get_sell_rating(ticker):
         
         sell_rating = 0
         
-        df = pdr.get_data_yahoo(ticker, start, end)
+        df = DataReader(ticker, 'yahoo', start, end)
         price = si.get_live_price(ticker)
         df['% Change'] = df['Adj Close'].pct_change()
         
@@ -827,23 +825,23 @@ def screener():
                     
                     parsed_news.append([ticker, date, time, text])
                     
-            vader = SentimentIntensityAnalyzer()
+            # vader = SentimentIntensityAnalyzer()
             
-            columns = ['ticker', 'date', 'time', 'headline']
-            dataframe = pd.DataFrame(parsed_news, columns=columns)
-            scores = dataframe['headline'].apply(vader.polarity_scores).tolist()
+            # columns = ['ticker', 'date', 'time', 'headline']
+            # dataframe = pd.DataFrame(parsed_news, columns=columns)
+            # scores = dataframe['headline'].apply(vader.polarity_scores).tolist()
             
-            scores_df = pd.DataFrame(scores)
-            dataframe = dataframe.join(scores_df, rsuffix='_right')
+            # scores_df = pd.DataFrame(scores)
+            # dataframe = dataframe.join(scores_df, rsuffix='_right')
 
-            dataframe = dataframe.set_index('ticker')
-            sentiment = round(dataframe['compound'].mean(), 2)
+            # dataframe = dataframe.set_index('ticker')
+            # sentiment = round(dataframe['compound'].mean(), 2)
 
             num_of_years = 40
             start_date = dt.datetime.now() - dt.timedelta(int(365.25 * num_of_years))
             end_date = dt.datetime.now()
-
-            df = pdr.get_data_yahoo(stock, start_date, end_date).dropna()
+            
+            df = DataReader(stock, 'yahoo', start_date, end_date).dropna()
             
             df.drop(df[df["Volume"]<1000].index, inplace=True)
             
@@ -875,7 +873,7 @@ def screener():
                             lastGLV=curentGLV
                             counter=0
             
-            df = pdr.get_data_yahoo(stock, start_date, end_date).dropna()
+            df = DataReader(stock, 'yahoo', start_date, end_date).dropna()
             sma = 50
 
             df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
