@@ -825,17 +825,17 @@ def screener():
                     
                     parsed_news.append([ticker, date, time, text])
                     
-            # vader = SentimentIntensityAnalyzer()
+            vader = SentimentIntensityAnalyzer()
             
-            # columns = ['ticker', 'date', 'time', 'headline']
-            # dataframe = pd.DataFrame(parsed_news, columns=columns)
-            # scores = dataframe['headline'].apply(vader.polarity_scores).tolist()
+            columns = ['ticker', 'date', 'time', 'headline']
+            dataframe = pd.DataFrame(parsed_news, columns=columns)
+            scores = dataframe['headline'].apply(vader.polarity_scores).tolist()
             
-            # scores_df = pd.DataFrame(scores)
-            # dataframe = dataframe.join(scores_df, rsuffix='_right')
+            scores_df = pd.DataFrame(scores)
+            dataframe = dataframe.join(scores_df, rsuffix='_right')
 
-            # dataframe = dataframe.set_index('ticker')
-            # sentiment = round(dataframe['compound'].mean(), 2)
+            dataframe = dataframe.set_index('ticker')
+            sentiment = round(dataframe['compound'].mean(), 2)
 
             num_of_years = 40
             start_date = dt.datetime.now() - dt.timedelta(int(365.25 * num_of_years))
