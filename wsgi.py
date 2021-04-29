@@ -6,7 +6,6 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import datetime as dt
 from pandas_datareader import data as pdr
-
 import talib
 import requests
 from bs4 import BeautifulSoup as bs
@@ -211,9 +210,10 @@ def buy_rating(ticker):
         condition_33 = rel_volume > 1 and price > df["Open"][-1]
         
         # Condition 34: Tight Action on Low Volume (Low Volatility)
-        df['Diff'] = df['High'] / df['Low']
-        real_volatility = (((((df['High'].rolling(window=10).max())/(df['Low'].rolling(window=10).min())) / df['Diff'].rolling(window=10).mean()) - 1) * 100)[-1]
-        condition_34 = real_volatility < 12 and (df['Volume'].rolling(window=10).mean()[-1] < df['Volume'].rolling(window=50).mean()[-1])
+        rolling_high = df['High'].rolling(window=2).max()
+        rolling_low = df['Low'].rolling(window=2).min()
+        real_volatility = (((((((rolling_high[-1] / rolling_low[-1]) -1)+(rolling_high[-2] / rolling_low[-2]) -1) * 50)) + (((rolling_high[-1] / rolling_low[-1])-1)*100))/2)
+        condition_34 = real_volatility < 7.5 and ((1.3 * df['Volume'].rolling(window=10).mean()[-1]) < df['Volume'].rolling(window=50).mean()[-1])
     
         # Condition 35: Black Dot
         condition_35 = (slowk_104[-2] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-2] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-3] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-3] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2]) or (slowk_104[-4] < 25 and df['Adj Close'][-1] > df['EMA_21'][-1] and df['Adj Close'][-2] < df['EMA_21'][-2] or slowk_104[-4] < 25 and df['Adj Close'][-1] > df['SMA_30'][-1] and df['Adj Close'][-2] < df['SMA_30'][-2])
