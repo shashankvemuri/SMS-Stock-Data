@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import datetime as dt
-from pandas_datareader import DataReader
+from pandas_datareader import data as pdr
 
 import talib
 import requests
@@ -49,12 +49,12 @@ def get_finviz_data(ticker):
 def buy_rating(ticker):
     try:
         start = dt.date.today() - dt.timedelta(days = 365)
-        end = dt.date.today()
+        end = dt.date.today() + dt.timedelta(days = 1)
         
         buy_rating = 0
         technical_buy_rating = 0
         
-        df = DataReader(ticker, 'yahoo', start, end)
+        df = pdr.get_data_yahoo(ticker, start, end)
         price = df['Adj Close'][-1]
         df['% Change'] = df['Adj Close'].pct_change()
         df['EMA_4_H'] = talib.EMA(df['High'], timeperiod=4)
@@ -423,11 +423,11 @@ def buy_rating(ticker):
 def get_sell_rating(ticker):
     try:
         start = dt.date.today() - dt.timedelta(days = 365)
-        end = dt.date.today()
+        end = dt.date.today() + dt.timedelta(days = 1)
         
         sell_rating = 0
         
-        df = DataReader(ticker, 'yahoo', start, end)
+        df = pdr.get_data_yahoo(ticker, start, end)
         price = si.get_live_price(ticker)
         df['% Change'] = df['Adj Close'].pct_change()
         
@@ -837,10 +837,10 @@ def screener():
             sentiment = round(dataframe['compound'].mean(), 2)
 
             num_of_years = 40
-            start_date = dt.datetime.now() - dt.timedelta(int(365.25 * num_of_years))
-            end_date = dt.datetime.now()
+            start_date = dt.datetime.today() - dt.timedelta(int(365.25 * num_of_years))
+            end_date = dt.datetime.today() + dt.timedelta(days = 1)
             
-            df = DataReader(stock, 'yahoo', start_date, end_date).dropna()
+            df = pdr.get_data_yahoo(ticker, start_date, end_date).dropna()
             
             df.drop(df[df["Volume"]<1000].index, inplace=True)
             
@@ -872,7 +872,9 @@ def screener():
                             lastGLV=curentGLV
                             counter=0
             
+            df = pdr.get_data_yahoo(ticker, start_date, end_date).dropna()
             sma = 50
+
             df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
             df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
 
