@@ -798,7 +798,7 @@ def screener():
             change = str(round(((price-last_close)/last_close)*100, 4)) + '%'
 
             # Set up scraper
-            url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,10,16,17,18,22,23,25,27,28,29,31,33,39,42,43,46,47,53,54,57,58,60,63,64,65,66,67,68,69")
+            url = (f"https://finviz.com/screener.ashx?v=152&ft=4&t={stock}&ar=180&c=1,2,3,4,5,6,10,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,33,39,40,41,42,43,46,47,48,52,53,54,57,58,60,62,63,64,65,66,67,68,69,70")
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             webpage = urlopen(req).read()
             html = BeautifulSoup(webpage, "html.parser")
