@@ -254,7 +254,7 @@ def buy_rating(ticker):
         condition_45 = df
         '''
         
-        message = '\nReqs Passed:'
+        message = '\nBuy Reqs Passed:'
         
         if (condition_8):
             buy_rating += 1
@@ -793,6 +793,10 @@ def screener():
             # price
             price = si.get_live_price('{}'.format(message_body))
             price = round(price, 2)
+            
+            start = dt.date.today() - dt.timedelta(days = 365)
+            end = dt.date.today() + dt.timedelta(days = 1)
+            df = pdr.get_data_yahoo(stock, start, end)
 
             last_close = df['Close'].tolist()[-2]
             change = str(round(((price-last_close)/last_close)*100, 4)) + '%'
