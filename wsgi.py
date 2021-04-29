@@ -872,9 +872,7 @@ def screener():
                             lastGLV=curentGLV
                             counter=0
             
-            df = DataReader(stock, 'yahoo', start_date, end_date).dropna()
             sma = 50
-
             df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
             df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
 
