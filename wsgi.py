@@ -4,7 +4,6 @@ from yahoo_fin import stock_info as si
 import pandas as pd
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import datetime as dt
 from pandas_datareader import data as pdr
 
@@ -795,94 +794,6 @@ def screener():
             price = si.get_live_price('{}'.format(message_body))
             price = round(price, 2)
 
-            finwiz_url = 'https://finviz.com/quote.ashx?t='
-            news_tables = {}
-            
-            url = finwiz_url + stock
-            req = Request(url=url,headers={'user-agent': 'my-app/0.0.1'})
-            response = urlopen(req)
-            html = BeautifulSoup(response, features="lxml")
-            news_table = html.find(id='news-table')
-            news_tables[stock] = news_table
-            
-            parsed_news = []
-            
-            # Iterate through the news
-            for file_name, news_table in news_tables.items():
-                for x in news_table.findAll('tr'):
-                    text = x.a.get_text()
-                    date_scrape = x.td.text.split()
-            
-                    if len(date_scrape) == 1:
-                        time = date_scrape[0]
-                        
-                    else:
-                        date = date_scrape[0]
-                        time = date_scrape[1]
-            
-                    ticker = file_name.split('_')[0]
-                    
-                    parsed_news.append([ticker, date, time, text])
-                    
-            vader = SentimentIntensityAnalyzer()
-            
-            columns = ['ticker', 'date', 'time', 'headline']
-            dataframe = pd.DataFrame(parsed_news, columns=columns)
-            scores = dataframe['headline'].apply(vader.polarity_scores).tolist()
-            
-            scores_df = pd.DataFrame(scores)
-            dataframe = dataframe.join(scores_df, rsuffix='_right')
-
-            dataframe = dataframe.set_index('ticker')
-            sentiment = round(dataframe['compound'].mean(), 2)
-
-            num_of_years = 40
-            start_date = dt.datetime.today() - dt.timedelta(int(365.25 * num_of_years))
-            end_date = dt.datetime.today() + dt.timedelta(days = 1)
-            
-            df = pdr.get_data_yahoo(ticker, start_date, end_date).dropna()
-            
-            df.drop(df[df["Volume"]<1000].index, inplace=True)
-            
-            avg_volume = df['Volume'].head(50).mean()
-            avg_volume = round(avg_volume)
-            avg_volume = '{:,}'.format(avg_volume)
-
-            current_volume = df['Volume'].tolist()
-            current_volume = round(current_volume[-1])
-            current_volume = '{:,}'.format(current_volume)
-
-            dfmonth=df.groupby(pd.Grouper(freq="M"))["High"].max()
-
-            glDate=0
-            lastGLV=0
-            currentDate=""
-            curentGLV=0
-            for index, value in dfmonth.items():
-                if value > curentGLV:
-                    curentGLV=value
-                    currentDate=index
-                    counter=0
-                if value < curentGLV:
-                    counter=counter+1
-
-                    if counter==3 and ((index.month != end_date.month) or (index.year != end_date.year)):
-                        if curentGLV != lastGLV:
-                            glDate=currentDate
-                            lastGLV=curentGLV
-                            counter=0
-            
-            df = pdr.get_data_yahoo(ticker, start_date, end_date).dropna()
-            sma = 50
-
-            df['SMA'+str(sma)] = df.iloc[:,4].rolling(window=sma).mean() 
-            df['PC'] = ((df["Adj Close"]/df['SMA'+str(sma)])-1)*100
-
-            mean = round(df["PC"].mean(), 2)
-            stdev= round(df["PC"].std(), 2)
-            current = round(df["PC"][-1], 2)
-            yday = round(df["PC"][-2], 2)
-
             last_close = df['Close'].tolist()[-2]
             change = str(round(((price-last_close)/last_close)*100, 4)) + '%'
 
@@ -897,11 +808,6 @@ def screener():
             stocks = stocks[1:]
             stocks['Price'] = [f'{price}']
             stocks['Change'] = [f'{change}']
-            stocks['Mean Dev. from 50 SMA'] = [f'{mean}%']
-            stocks['Stdev. from 50 SMA'] = [f'{stdev}%']
-            stocks["Yday Dev. from 50 SMA"] = [f'{yday}%']
-            stocks['Curr Dev. from 50 SMA'] = [f'{current}%']
-            stocks['News Sentiment'] = [f'{sentiment}']
             message = "\n"
             for attr, val in zip(stocks.columns, stocks.iloc[0]):
                 message=message + f"{attr} : {val}\n"
