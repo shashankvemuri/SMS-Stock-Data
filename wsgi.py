@@ -5,7 +5,6 @@ import pandas as pd
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import yfinance as yf
 import datetime as dt
 from pandas_datareader import DataReader
 
